@@ -14,6 +14,7 @@ from sqlalchemy import Engine
 from app import __version__
 from app.api import config as config_api
 from app.api import conflicts as conflicts_api
+from app.api import documents as documents_api
 from app.api import health as health_api
 from app.api import imports as imports_api
 from app.api import map as map_api
@@ -65,6 +66,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
     app.include_router(conflicts_api.router)
     app.include_router(market_api.router)
     app.include_router(map_api.router)
+    app.include_router(documents_api.router)
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     @app.get("/", include_in_schema=False)

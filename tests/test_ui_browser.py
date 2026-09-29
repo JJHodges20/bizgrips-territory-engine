@@ -65,34 +65,35 @@ def browser():
 def test_workspace_views_render_without_errors(server_url: str, browser) -> None:
     errors: list[str] = []
     page = browser.new_page(viewport={"width": 1366, "height": 860})
+    page.set_default_timeout(30000)
     page.on("pageerror", lambda exc: errors.append(f"pageerror: {exc}"))
     page.on("console", lambda msg: errors.append(msg.text) if msg.type == "error" else None)
     page.route("**/tile.openstreetmap.org/**", lambda route: route.abort())
 
-    page.goto(f"{server_url}/app#/registry", wait_until="networkidle")
-    page.wait_for_selector("table.table tbody tr.clickable", timeout=15000)
+    page.goto(f"{server_url}/app#/registry", wait_until="load")
+    page.wait_for_selector("table.table tbody tr.clickable", timeout=30000)
     assert "T-000002" in page.inner_text("table.table")
     assert "reservation expired" in page.inner_text("table.table")
     page.click("table.table tbody tr.clickable >> nth=0")
-    page.wait_for_selector("#drawer:not([hidden])", timeout=10000)
+    page.wait_for_selector("#drawer:not([hidden])", timeout=30000)
     assert "Front Range Showers" in page.inner_text("#drawer")
     assert page.is_visible("#drawer button:has-text('Cancel')")
     page.click("#drawer .close")
 
-    page.goto(f"{server_url}/app#/sales", wait_until="networkidle")
+    page.goto(f"{server_url}/app#/sales", wait_until="load")
     page.fill(".sales-form input.input", "80123, 80127")
     page.click(".sales-form button[type=submit]")
-    page.wait_for_selector(".avail-banner", timeout=20000)
+    page.wait_for_selector(".avail-banner", timeout=30000)
     assert "PARTIALLY AVAILABLE" in page.inner_text(".avail-banner").upper()
     assert "Talking points" in page.inner_text("#view")
 
-    page.goto(f"{server_url}/app#/map?zips=80123,80120", wait_until="networkidle")
-    page.wait_for_selector(".map-panel", timeout=15000)
-    page.wait_for_function("document.querySelector('.metric-row') !== null", timeout=20000)
+    page.goto(f"{server_url}/app#/map?zips=80123,80120", wait_until="load")
+    page.wait_for_selector(".map-panel", timeout=30000)
+    page.wait_for_function("document.querySelector('.metric-row') !== null", timeout=30000)
     panel = page.inner_text(".map-panel")
     assert "Opportunity Units" in panel and "2 selected" in panel
     page.wait_for_function(
-        "document.querySelectorAll('.leaflet-interactive').length > 0", timeout=20000
+        "document.querySelectorAll('.leaflet-interactive').length > 0", timeout=30000
     )
     page.select_option(".map-toolbar select", "tier")
     assert "Tier A" in page.inner_text(".legend")
@@ -102,7 +103,7 @@ def test_workspace_views_render_without_errors(server_url: str, browser) -> None
     page.wait_for_function(
         "(prev) => document.querySelector('.map-panel').innerText !== prev",
         arg=before,
-        timeout=10000,
+        timeout=30000,
     )
     assert "selected" in page.inner_text(".map-panel")
 

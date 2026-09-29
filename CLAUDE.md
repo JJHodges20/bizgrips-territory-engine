@@ -113,3 +113,7 @@ Direct equivalents: `venv/Scripts/python.exe -m pytest -q`, `... -m ruff check .
   never imply otherwise.
 - Talking points (`app/services/market_checker.py`) state public-data facts only; the
   `FORBIDDEN_WORDS` list is enforced by tests. Client names on conflicts are internal-use only.
+- Client-facing documents (`app/services/proposal_document.py`, rendered by the vendored
+  `app/documents/brand/`) are positive but factual: public-data facts, the ZIP list, exclusivity
+  and reservation terms from the rules; never scores, tiers, OU, other clients' names or
+  performance claims. Tests enforce this.

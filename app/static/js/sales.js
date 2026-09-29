@@ -73,6 +73,7 @@ function render(check) {
         el("div", {}, el("h2", {}, `Suggested territory · ${zips.length} ZIPs`), el("div", { class: "row", style: "margin-top:6px" }, proposal.flags.map(flagEl))),
         el("div", { class: "row" },
           el("button", { class: "btn btn-sm", type: "button", onClick: () => window.bgGo("map", { zips: zips.join(",") }) }, "Show on map"),
+          el("button", { class: "btn btn-sm", type: "button", onClick: () => clientPdf(check) }, "Client proposal (PDF)"),
           el("button", { class: "btn btn-sm btn-primary", type: "button", onClick: () => saveProposal(check, zips) }, "Save as proposal"))),
       table(headers, rows),
       proposal.excluded.length ? el("div", { class: "card-body muted" }, "Excluded: " + proposal.excluded.map((e) => `${e.zcta} ${fmt.words(e.reason)}`).join("; ")) : null));
@@ -85,6 +86,31 @@ function render(check) {
     results.appendChild(el("div", { class: "card" }, el("div", { class: "card-head" }, el("h2", {}, "Nearby replacement ZIPs")), table(headers, rows)));
   }
   results.appendChild(el("p", { class: "muted" }, check.disclaimer));
+}
+
+async function clientPdf(check) {
+  const ctx = context();
+  const values = await formModal({ title: "Client proposal (PDF)", submitLabel: "Generate PDF",
+    intro: "A positive, professional document with public-data facts and the ZIP list only. No scores, tiers or other clients appear in it.",
+    fields: [
+      { name: "client_business_name", label: "Client business name", required: true, value: check.query.client_name !== "Prospect" ? check.query.client_name : "" },
+      { name: "prepared_by", label: "Prepared by", placeholder: "optional" },
+    ] });
+  if (!values) return;
+  try {
+    const query = ctx.as_of ? `?as_of=${encodeURIComponent(ctx.as_of)}` : "";
+    const response = await fetch(`/documents/proposal.pdf${query}`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proposal: check.suggested_territory, client_business_name: values.client_business_name, prepared_by: values.prepared_by }),
+    });
+    if (!response.ok) {
+      const payload = await response.json();
+      throw new Error(payload.detail && payload.detail.message ? payload.detail.message : `HTTP ${response.status}`);
+    }
+    const url = URL.createObjectURL(await response.blob());
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (err) { toast(errorMessage(err), "error", 6000); }
 }
 
 async function saveProposal(check, zips) {

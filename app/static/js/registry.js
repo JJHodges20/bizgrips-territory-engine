@@ -149,9 +149,18 @@ export async function openTerritory(id) {
   const actions = Object.keys(ACTIONS).filter((k) => ACTIONS[k].statuses.includes(t.status))
     .map((k) => el("button", { class: `btn btn-sm ${ACTIONS[k].cls || ""}`, type: "button", onClick: () => act(id, k) }, ACTIONS[k].label));
   actions.push(el("button", { class: "btn btn-sm btn-ghost", type: "button", onClick: () => window.bgGo("map", { territory: id }) }, "Show on map"));
+  if (["PROPOSED", "RESERVED", "ACTIVE_PROTECTED"].includes(t.status)) {
+    actions.push(el("button", { class: "btn btn-sm btn-ghost", type: "button", onClick: () => openProposalPdf(id) }, "Client proposal (PDF)"));
+  }
   drawer.open({ title: id, subtitle: `${t.client_business_name} · ${t.zip_count} ZIPs`, actions, body: tabbed([
     { title: "Overview", content: overview }, { title: `ZIPs (${t.zip_count})`, content: zips },
     { title: "Audit trail", content: audit }, { title: `Exceptions (${t.exceptions.length})`, content: exceptions }]) });
+}
+
+function openProposalPdf(id) {
+  const ctx = context();
+  const query = ctx.as_of ? `?as_of=${encodeURIComponent(ctx.as_of)}` : "";
+  window.open(`/territories/${id}/proposal.pdf${query}`, "_blank", "noopener");
 }
 
 async function newTerritory() {

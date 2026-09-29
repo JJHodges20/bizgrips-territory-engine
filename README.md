@@ -72,6 +72,18 @@ The header's *as of* date and *client id* apply to every view. Map polygons need
 milestone on). Tiles come from OpenStreetMap by default; change `tileUrl` in
 `app/static/config.js` for heavier use. There is no login yet: keep it on the internal network.
 
+## Client-facing proposal PDF
+
+Every saved territory (and every suggested territory in the sales check) can be turned into a
+branded, client-facing PDF: `GET /territories/{id}/proposal.pdf` or `POST /documents/proposal.pdf`,
+or the **Client proposal (PDF)** buttons in the workspace. The document uses the BizGrips brand
+renderer vendored in `app/documents/brand/` (Montserrat and Poppins embedded, logo on every
+page) and is written in a positive, professional voice from public-data facts only: territory
+overview, market highlights, the ZIP list, exclusivity and reservation terms from the business
+rules, next steps, and a note on the figures. Internal scores, tiers, Opportunity Units and other
+clients' names never appear in it, and it makes no performance claims. Add `?format=md` to see
+the source markup (the skill's dialect: eyebrows, numbered sections, callouts, definition rows).
+
 Browser smoke test (optional): `pip install -e ".[ui-test]"` then `python -m playwright install
 chromium`; `tests/test_ui_browser.py` drives the three views in headless Chromium and fails on
 any console or page error. It is skipped automatically when Playwright or the browser is

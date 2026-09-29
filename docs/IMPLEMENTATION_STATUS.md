@@ -189,6 +189,19 @@ B25038) recorded as a V2 candidate.
 - Dev database: the Milestone 0 fixture reservation T-000002 was cancelled through the API
   (audit line by `dev-cleanup`), so Littleton proposals no longer exclude 80127/80129.
 
+### Client-facing proposal PDF (2026-09-29, requested after Milestone 8)
+
+- `app/documents/brand/`: the BizGrips document-formatting renderer vendored from the skill
+  (brand constants, markup parser, ReportLab PDF builder with an in-memory `render_pdf`),
+  fonts and logo included; `reportlab` added to the core dependencies.
+- `app/services/proposal_document.py`: territory data -> skill markup (cover, territory
+  overview, three market highlights, ZIP list, exclusivity and how-we-built-it callouts, next
+  steps, about-the-figures). Reservation days come from the rules; the ACS release label from
+  `census_variables.yaml`. No scores, tiers, OU, other clients or performance claims.
+- Endpoints `GET /territories/{id}/proposal.pdf` and `POST /documents/proposal.pdf`
+  (`?format=md` returns the markup); "Client proposal (PDF)" buttons in the registry drawer and
+  the sales check. Rendered pages were reviewed visually against real data.
+
 ## Known issues / open questions
 
 - The workspace and `/sales` have no authentication and show client names on conflicts; keep
@@ -279,3 +292,4 @@ to hide them.
 | 2026-09-29 | Workspace built as a FastAPI-served static app with vendored Leaflet and no build step. | Keeps the one-language, one-process deployment; a polished UI does not need a bundler. |
 | 2026-09-29 | Stored polygons are simplified (0.0005 degrees); the map queries by stored bounding boxes; viewports over 4 degrees are refused. | Keeps payloads small and queries cheap on SQLite without vector tiles or PostGIS. |
 | 2026-09-29 | Custom groupings are evaluated live but never written; saving needs a clean evaluation (`can_save`) and creates only a PROPOSED territory. | The map recommends; a named approver still reserves. |
+| 2026-09-29 | The client proposal PDF shows public-data facts and the ZIP list only; internal indices and other clients' names are excluded by design. | Positive, professional wording for prospects without exposing internal scoring or registry details. |
