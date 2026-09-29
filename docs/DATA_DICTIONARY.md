@@ -123,8 +123,8 @@ point are not adjacent.
 | contract_end_date | DATE NULL | |
 | release_date | DATE NULL | date ZCTAs become available |
 | exceptions_json | JSON NULL | list of {type, approved_by, reason, at} |
-| generation_snapshot_json | JSON NULL | the proposal (explanation, aggregates, rules version) at approval |
-| notes | TEXT NULL | append-only audit trail |
+| generation_snapshot_json | JSON NULL | the proposal (explanation, aggregates, rules version); `zips` holds the ZIP list while the territory is PROPOSED |
+| notes | TEXT NULL | append-only audit trail: one `[date] EVENT by actor: detail` line per transition or exception |
 | created_at, updated_at | DATETIME | |
 
 ## 4. `territory_zip_assignments`

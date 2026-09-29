@@ -191,3 +191,19 @@ PENDING_RELEASE → RELEASED    on or after release_date; assignments → RELEAS
 
 Writing an assignment for a ZIP that already has a blocking assignment for another territory is
 rejected at the service level and, as a backstop, by the `uq_active_zip` database constraint.
+
+Implemented in Milestone 4 (`app/services/registry.py`, `app/repositories/registry.py`) with
+these additions:
+
+- `PROPOSED → CANCELLED` is allowed (discarding a proposal blocks nothing).
+- A PROPOSED territory keeps its ZIP list in `generation_snapshot_json["zips"]`; assignment
+  rows exist only from RESERVED onwards (assignment statuses have no PROPOSED value).
+- Creating a proposal that contains another client's blocked ZIP is refused (409
+  `ZIP_CONFLICT`); the conflict check runs again at reservation time because state can change
+  between the two.
+- `PENDING_RELEASE` past its `release_date` counts as available. Before a proposal or
+  reservation touches such a ZIP, and on `POST /registry/sweep`, the due release is completed
+  (RELEASED, audit note by "system"), which is what Standard section 11 prescribes for the
+  release date. Expired reservations are only flagged, never released automatically.
+- Every transition appends one audit line to `notes` (`[date] EVENT by actor: detail`); notes
+  are never rewritten.

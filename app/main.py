@@ -5,16 +5,20 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy import Engine
 
 from app import __version__
 from app.api import config as config_api
 from app.api import health as health_api
 from app.api import imports as imports_api
+from app.api import registry as registry_api
+from app.api import territories as territories_api
 from app.api import zctas as zctas_api
 from app.config.settings import Settings, get_settings
 from app.db import create_db_engine, create_session_factory
+from app.services.registry import RegistryError
 
 DESCRIPTION = (
     "Internal BizGrips territory intelligence: public-data market scoring, contiguous territory "
@@ -49,6 +53,16 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
     app.include_router(config_api.router)
     app.include_router(zctas_api.router)
     app.include_router(imports_api.router)
+    app.include_router(territories_api.router)
+    app.include_router(registry_api.router)
+
+    @app.exception_handler(RegistryError)
+    async def registry_error(_request: Request, exc: RegistryError) -> JSONResponse:
+        detail: dict = {"code": exc.code, "message": exc.message}
+        if exc.details is not None:
+            detail["details"] = exc.details
+        return JSONResponse(status_code=exc.status_code, content={"detail": detail})
+
     return app
 
 

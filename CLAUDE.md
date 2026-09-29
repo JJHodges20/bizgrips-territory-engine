@@ -8,9 +8,9 @@ requires a named human to approve before a territory becomes protected.
 Master roadmap: `docs/ROADMAP_V1.1.md`.
 
 ## Current milestone
-Milestones 0 (repository + specifications), 1 (public data ingestion), 2 (ZCTA read API) and
-3 (scoring + Opportunity Units) are complete. Next: Milestone 4 (territory registry). Always
-read `docs/IMPLEMENTATION_STATUS.md` first.
+Milestones 0-4 are complete (specifications, public data ingestion, ZCTA read API, scoring +
+Opportunity Units, territory registry). Next: Milestone 5 (territory generator). Always read
+`docs/IMPLEMENTATION_STATUS.md` first.
 
 ## Read these before changing territory logic
 1. `docs/BIZGRIPS_TERRITORY_STANDARD.md` — the business rules the software enforces
@@ -34,6 +34,9 @@ read `docs/IMPLEMENTATION_STATUS.md` first.
   (scenario loader).
 - Domain services are pure functions over plain data plus `BusinessRules`. No DB sessions
   inside scoring or generation. Repositories load data; services compute; API serialises.
+- The registry is the one stateful service: pure transition rules in `app/services/registry.py`
+  (`plan_*` functions, testable without a database) plus `RegistryService`, which only calls
+  `app/repositories/registry.py` to load records and apply plans. `as_of` is always explicit.
 
 ## Canonical terminology
 - **ZCTA**: Census ZIP Code Tabulation Area (5 digits). Market data is keyed by ZCTA. "ZIP" in

@@ -4,10 +4,10 @@ Read this first in every session. Update it at the end of every session.
 
 ## Current milestone
 
-**Milestone 3 — Opportunity scoring + Opportunity Units: complete (2026-09-29).**
-Next up: **Milestone 4 — Territory registry** (spec in `MILESTONES.md`, rules in
-`BIZGRIPS_TERRITORY_STANDARD.md` sections 6-11). Plan first. One open decision from the
-calibration report is waiting on BizGrips (see Known issues).
+**Milestone 4 — Territory registry: complete (2026-09-29).**
+Next up: **Milestone 5 — Territory generator** (spec in `MILESTONES.md`, algorithm in
+`TERRITORY_ALGORITHM.md` section 1). Plan first; it consumes the registry snapshot, the score
+cache and the adjacency graph built so far.
 
 ## Completed
 
@@ -85,9 +85,30 @@ B25038) recorded as a V2 candidate.
   aggregation and comparison, the script end to end, the endpoint; 95 tests pass.
 - `TEST_MARKETS.md` fixture table now carries the exact computed scores (grid total 59,000 OU).
 
+### Milestone 4 (2026-09-29)
+
+- `app/services/registry.py`: availability from the blocking-assignment snapshot (own ZIPs are
+  never conflicts; PENDING_RELEASE past its date counts as available; expired reservations
+  block and carry `RESERVATION_EXPIRED`), pure `plan_*` transition rules (reserve, extend,
+  activate, cancel, pending release, release), exception validation against the allowed list,
+  audit lines, `T-000001` ids, and `RegistryService` which loads/applies through
+  `app/repositories/registry.py`. `uq_active_zip` remains the database backstop.
+- API: `POST /territories` (PROPOSED from a ZIP list; 409 on conflicts, 422 on unknown ZCTAs),
+  list/get with flags, one endpoint per transition, `POST /territories/{id}/exceptions`,
+  `GET /zips/{zip}/availability`, `GET /registry/flags`, `POST /registry/sweep`. Rule
+  violations map to JSON errors with stable codes (`INVALID_TRANSITION`, `APPROVAL_REQUIRED`,
+  `ZIP_CONFLICT`, `EXCEPTION_NOT_ALLOWED`, `NO_MARKET_DATA`, `TERRITORY_NOT_FOUND`).
+- Tests: scenario 2 (active ZIP cannot be assigned twice, own client not in conflict, DB
+  backstop), scenario 9 (expired reservation blocks and is flagged until a human cancels it,
+  then the ZIPs are re-reserved), the full lifecycle with dates and audit trail, reserve-time
+  conflicts, exceptions, due-release completion, and the endpoints; 104 tests pass.
+
 ## Known issues / open questions
 
-- **Calibration decision (open, needs BizGrips):** with the V1 ramps 40% of scorable ZCTAs
+- The registry has no authentication yet; `approved_by` is a trusted string. Access control
+  is a deployment concern to settle before sales staff use the write endpoints (Milestone 8+).
+
+- **Calibration decision (2026-09-29, BizGrips: keep rules 1.0.0 for now):** with the V1 ramps 40% of scorable ZCTAs
   are Tier A and 34% Tier B, because three ceilings sit below or near the national median
   (owner share ceiling 0.85 vs median 0.78; owner 45+ ceiling 0.80 vs median 0.76; pre-2000
   ceiling 0.85 vs median 0.83), so 29-42% of ZCTAs max out those components. Projections on
@@ -99,7 +120,8 @@ B25038) recorded as a V2 candidate.
   | Recommended: keep floors, ceilings to p90 (0.925 / 0.90 / 0.95) | 16% | 40% | 27% | 8% | 67.4 B | 53.5 C | 29.5 D |
   | Full p10-p90 ramps | 8% | 24% | 34% | 27% | 54.3 C | 42.6 D | 16.2 D |
 
-  Recommendation: the middle option, applied as business rules 1.1.0 (ceilings only). It keeps
+  Recommendation (not applied; revisit once the generator and registry are in use): the middle
+  option as business rules 1.1.0 (ceilings only). It keeps
   Tier A meaningful (top ~16%) without pushing solid suburban markets into C. Changing it also
   means updating the worked example in `SCORING_SPEC.md` and the fixture table. Income and
   density ramps already fit the p10-p90 range and need no change.
@@ -121,10 +143,10 @@ B25038) recorded as a V2 candidate.
 
 ## Next task
 
-Milestone 4, step 1: registry service (`app/services/registry.py`) with the status machine
-from Standard sections 8-11 (PROPOSED -> RESERVED -> ACTIVE_PROTECTED -> PENDING_RELEASE ->
-RELEASED / CANCELLED), `approved_by` enforcement and the availability query, tested on
-scenarios 2, 3 and 9 before any write endpoints.
+Milestone 5, step 1: `app/services/generator.py` frontier expansion over the adjacency graph
+(`TerritoryRequest` -> `TerritoryProposal`) with the priority order and tie-breakers from
+`TERRITORY_ALGORITHM.md` section 1, using `RegistryService.availability` for exclusions and
+the cached scores/OU; prove scenarios 1, 3, 4, 6, 7 and 8 before adding the endpoint.
 
 ## Decisions log
 
@@ -148,3 +170,8 @@ scenarios 2, 3 and 9 before any write endpoints.
 | 2026-09-29 | Scores are cached by `score_all.py` but `GET /zctas/{zcta}/score` always computes live and returns the cache beside it. | Rules changes become visible immediately; drift between cache and rules is never hidden. |
 | 2026-09-29 | Territory shares use paired totals; OU of a ZCTA with zero owner households is 0, not None. | No bias from a single missing field; empty is different from unknown. |
 | 2026-09-29 | Ramp recalibration deferred to a BizGrips decision; report and projections recorded instead of changing rules 1.0.0. | Every rule change is a human decision; the projections give the numbers needed to make it. |
+| 2026-09-29 | BizGrips chose to keep the 1.0.0 ramps for now after reviewing the projections. | Operational evidence first; the report and projections stay on file for a later revision. |
+| 2026-09-29 | Proposals keep their ZIP list in `generation_snapshot_json`; assignments exist from RESERVED onwards. | Assignment statuses have no PROPOSED value and proposals must not block anyone. |
+| 2026-09-29 | A proposal containing another client's blocked ZIP is refused, and the check repeats at reservation. | Proposals never carry known conflicts; state can change between proposal and reservation. |
+| 2026-09-29 | Due releases (PENDING_RELEASE past `release_date`) complete automatically when touched or swept; expired reservations never do. | Standard section 11 makes the release date the event; section 8 keeps expiry a human decision. |
+| 2026-09-29 | `as_of` is an explicit parameter of every registry action; the API defaults it to today (UTC). | Deterministic tests and back-dated actions without clock reads inside services. |
