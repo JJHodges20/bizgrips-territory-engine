@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import Engine
 
 from app import __version__
@@ -14,6 +16,7 @@ from app.api import config as config_api
 from app.api import conflicts as conflicts_api
 from app.api import health as health_api
 from app.api import imports as imports_api
+from app.api import map as map_api
 from app.api import market as market_api
 from app.api import registry as registry_api
 from app.api import territories as territories_api
@@ -21,6 +24,8 @@ from app.api import zctas as zctas_api
 from app.config.settings import Settings, get_settings
 from app.db import create_db_engine, create_session_factory
 from app.services.registry import RegistryError
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 DESCRIPTION = (
     "Internal BizGrips territory intelligence: public-data market scoring, contiguous territory "
@@ -59,6 +64,17 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
     app.include_router(registry_api.router)
     app.include_router(conflicts_api.router)
     app.include_router(market_api.router)
+    app.include_router(map_api.router)
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+    @app.get("/", include_in_schema=False)
+    async def root() -> RedirectResponse:
+        return RedirectResponse(url="/app")
+
+    @app.get("/app", include_in_schema=False)
+    @app.get("/app/{path:path}", include_in_schema=False)
+    async def workspace(path: str = "") -> FileResponse:
+        return FileResponse(STATIC_DIR / "index.html")
 
     @app.exception_handler(RegistryError)
     async def registry_error(_request: Request, exc: RegistryError) -> JSONResponse:

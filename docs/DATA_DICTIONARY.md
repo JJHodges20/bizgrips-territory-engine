@@ -23,7 +23,8 @@ a row to section 8 when refreshing.
 | latitude, longitude | FLOAT NULL | Centroid of the boundary geometry (EPSG:5070); the representative point when the centroid falls outside the polygon | WGS84; always inside the ZCTA |
 | land_area_sq_miles | FLOAT NULL | `ALAND20` / 2,589,988.11 | |
 | water_area_sq_miles | FLOAT NULL | `AWATER20` / 2,589,988.11 | |
-| geometry_geojson | TEXT NULL | CB boundary polygon | Optional; loaded with `--with-geometry`. PostGIS column can be added later. |
+| geometry_geojson | TEXT NULL | CB boundary polygon, simplified (Douglas-Peucker 0.0005 deg, topology preserved) | Loaded with `--with-geometry` (default in `make import-data` since Milestone 8); about 3 KB per ZCTA. |
+| bbox_min_lon, bbox_min_lat, bbox_max_lon, bbox_max_lat | FLOAT NULL | WGS84 bounding box of the boundary | Map viewport queries (`GET /map/zctas`); always stored. |
 
 ### Households
 

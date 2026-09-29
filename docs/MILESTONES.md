@@ -97,7 +97,68 @@ Acceptance: scenarios 1, 3, 4, 6, 7, 8 plus determinism hash test.
 and the sales view; talking points generated from data. Acceptance: one input → full view in
 under a minute; wording review for "no performance guarantee".
 
-## Milestones 8–11
+## Milestone 8 — Territory workspace (registry board, map, custom groupings)
 
-Map (only after 5–7 are trusted), onboarding/n8n hooks, Meta provisioning consumer, performance
-learning schema. Specs to be written when reached.
+**Goal:** an internal web app that lets sales and managers see which areas are taken, manage
+the registry by hand, view ZCTAs on a map, select custom ZIP groupings and score them, and run
+the sales check, all from one professional interface. BizGrips decided (2026-09-29) to build
+this now and to keep onboarding/n8n hooks, Meta provisioning and performance learning on hold.
+
+**Inputs:** the existing API (registry, generator, conflicts, market check, scores) plus:
+- `GET /map/zctas?bbox=minLon,minLat,maxLon,maxLat&as_of=&client_id=` — GeoJSON
+  FeatureCollection of the ZCTAs whose bounding box intersects the viewport, with score, tier,
+  OU, households, availability, blocking territory/client and flags as properties.
+- `GET /map/territories/{territory_id}` — the territory's ZCTAs as GeoJSON plus bounds.
+- `GET /map/locate?q=` — a ZIP or "City, ST" resolved to a centre and bounds.
+- `POST /territories/evaluate` — score a custom ZIP grouping: aggregates, target status for a
+  size class, contiguity and components, conflicts, per-ZIP details, flags.
+- Geometry: `scripts/import_geography.py --with-geometry` stores simplified polygons
+  (Douglas-Peucker, 0.0005 degrees, topology preserved) and every import stores each ZCTA's
+  WGS84 bounding box (four new `zcta_markets` columns, Alembic revision `b7c1d2e3f4a5`).
+
+**Outputs:** `app/static/` single-page app served at `/app` (vanilla ES modules, vendored
+Leaflet 1.9.4, OpenStreetMap tiles by default with the tile URL configurable in
+`app/static/config.js`), with three views:
+1. **Registry board** — territories with status, flags (expired reservation, release due),
+   client, ZIP count, dates; filters; detail drawer (overview, ZIPs, audit trail, exceptions);
+   every registry transition and exception as a form; manual "new territory" from a ZIP list;
+   "show on map".
+2. **Map** — ZCTA polygons coloured by availability or by tier/score (toggle), legend, hover
+   card (ZIP, city, tier, score, OU, status, client), search-and-fly, click to add/remove ZCTAs
+   to a custom grouping, selection panel with live evaluation (score, tier, OU, households,
+   owner 45+, contiguity, conflicts, target band), "generate from here", "save as proposal".
+3. **Sales check** — the Milestone 7 view (input box, availability, talking points,
+   statistics, suggested territory) in the same design system, with "show on map".
+A shared design system: layout with navigation rail, typography and colour tokens, status
+badges, tables, drawers, modals, toasts, empty and loading states, responsive down to tablet.
+
+**Business rules:** the UI changes registry state only through the existing endpoints (named
+approver, reasons, dates); the map never writes except "save selection as proposal", which
+creates a PROPOSED territory; client names on conflicts are internal-use only; wording never
+implies performance guarantees; colours: available green, reserved amber, protected red,
+pending release violet, unscored grey; tiers A-D on a single hue ramp.
+
+**Edge cases:** viewport too large (the server refuses bboxes over 4 x 4 degrees or more than
+3,000 features with a "zoom in" message); ZCTAs without geometry (skipped and counted);
+multipolygons; unscored ZCTAs; selections containing blocked or unknown ZIPs (evaluated,
+flagged, cannot be saved while blocked); tile server unreachable (polygons still render on a
+plain background); a territory whose ZCTAs lack geometry (list still shown).
+
+**Acceptance:** Denver-metro viewport loads in under 2 s from the local database; evaluating a
+five-ZCTA selection returns in under 1 s; saving creates a PROPOSED territory visible on the
+board; each transition works from the board; sales check runs from the UI; all new endpoints
+covered by API tests on fixture-seeded databases with synthetic square geometries; every
+JavaScript module parses (esprima check in the test suite); no console errors on load.
+
+**Fixtures:** `tests/fixtures/zcta_boundaries_four.geojson` (bbox/geometry pipeline) and
+synthetic square geometries attached to the Denver grid rows in tests.
+
+**Out of scope:** authentication and roles (internal network only for now), editing market
+data, vector tiles or PostGIS, printing/exports, onboarding/n8n, Meta, performance learning.
+
+---
+
+## Milestones 9–11 (on hold)
+
+Onboarding/n8n hooks, Meta provisioning consumer, performance learning schema. Specs to be
+written when BizGrips brings them forward.

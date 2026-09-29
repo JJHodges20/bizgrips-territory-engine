@@ -48,7 +48,7 @@ seed-fixtures:
 	$(PY) scripts/seed_fixtures.py --scenario $(SCENARIO)
 
 import-data:
-	$(PY) scripts/import_geography.py
+	$(PY) scripts/import_geography.py --with-geometry
 	$(PY) scripts/import_census.py
 
 clean:

@@ -4,12 +4,11 @@ Read this first in every session. Update it at the end of every session.
 
 ## Current milestone
 
-**Milestone 7 — Sales-call market checker: complete (2026-09-29). V1 (Milestones 0-7) is
-complete.**
-Next up: Milestones 8-11 (map, onboarding / n8n hooks, Meta provisioning consumer, performance
-learning schema). Per the roadmap, each needs a written spec (inputs, outputs, rules, edge cases,
-acceptance, fixtures, out-of-scope) before implementation, and the map waits until the generator
-and registry are trusted in use. Suggested first step: a Milestone 8 spec in `MILESTONES.md`.
+**Milestone 8 — Territory workspace (registry board, map, custom groupings): complete
+(2026-09-29).** BizGrips chose to build the UI now and to keep Milestones 9-11 (onboarding/n8n,
+Meta provisioning, performance learning) on hold.
+Next up: use the workspace on real markets and collect what sales and managers need changed;
+no further milestone is scheduled until BizGrips brings one forward.
 
 ## Completed
 
@@ -164,7 +163,33 @@ B25038) recorded as a V2 candidate.
 - Real data: 80123, a pasted Akron list and "Chandler, AZ" each answer in under 0.1 s with a
   Standard-band territory and seven talking points.
 
+### Milestone 8 (2026-09-29)
+
+- Spec written first (`MILESTONES.md`), then: `zcta_markets` bounding-box columns (Alembic
+  `b7c1d2e3f4a5`), simplified polygons stored by `import_geography.py --with-geometry`
+  (about 3 KB per ZCTA, 33,791 with geometry), `GET /map/zctas` (viewport GeoJSON with
+  availability, client, score, tier, OU; refuses viewports over 4 degrees or 3,000 features),
+  `GET /map/territories/{id}`, `GET /map/locate`, `POST /territories/evaluate`
+  (`app/services/group_evaluator.py`: aggregates, target band, contiguity, conflicts, per-ZIP
+  status, flags, `can_save`).
+- `app/static/` workspace at `/app`: plain ES modules, vendored Leaflet 1.9.4 (BSD-2), design
+  system in `css/styles.css`; views `registry.js` (board, stats, filters, drawer with tabs,
+  every transition and exception as a form, manual creation, sweep), `map.js` (availability /
+  tier colouring, legend, hover card, locate, custom grouping with live evaluation, generate
+  from selection, save as proposal, territory highlight), `sales.js` (market check with save
+  and show-on-map). Header as-of date and client id apply everywhere and persist locally.
+- Tests: viewport features and guards, territory shape and locate, evaluation, static serving,
+  esprima parse of every module (added to the dev extras); 142 tests pass. Real data: the Denver
+  viewport (93 ZCTAs, 0.19 MB) answers in 0.13 s.
+- Not automated: no browser-based UI test (no Node or browser on this machine); module imports
+  are cross-checked statically and every module parses.
+
 ## Known issues / open questions
+
+- The workspace and `/sales` have no authentication and show client names on conflicts; keep
+  them on the internal network until access control is added.
+- OpenStreetMap public tiles are used with attribution; heavier use needs a tile provider
+  (`tileUrl` in `app/static/config.js`).
 
 - The `/sales` page has no authentication and shows client names on conflicts; it is for the
   internal network only until access control is added (see the registry note below).
@@ -211,10 +236,9 @@ B25038) recorded as a V2 candidate.
 
 ## Next task
 
-Write the Milestone 8 (map) spec in `MILESTONES.md` before any code: inputs (proposal or
-territory id), outputs (GeoJSON of ZCTAs with score/tier/status colouring, centroid markers),
-rules (read-only, no registry writes), edge cases (multipolygons, missing geometry), acceptance,
-fixtures. Geometry is available via `scripts/import_geography.py --with-geometry`.
+Field use: open `/app`, cancel the Milestone 0 fixture territories in the dev database, walk a
+real market through sales check -> map selection -> save as proposal -> reserve -> activate,
+and record feedback in this file before scheduling further UI work.
 
 ## Decisions log
 
@@ -249,3 +273,6 @@ fixtures. Geometry is available via `scripts/import_geography.py --with-geometry
 | 2026-09-29 | Replacement suggestions must touch the non-conflicting part of the request (or the proposal); a lone blocked ZIP gets the nearest available ZCTAs instead. | A replacement is only useful if it keeps the territory contiguous; with nothing to touch, distance is the best guide. |
 | 2026-09-29 | Postal ZIP to ZCTA mapping is identity when a record exists; otherwise NO_MARKET_DATA. A pasted list starts from its first known code; a city query starts from its highest-OU ZCTA. | No postal crosswalk beyond ZCTAs exists in the free sources; the first pasted code and the strongest ZCTA are the least surprising anchors. |
 | 2026-09-29 | Talking points are generated only from stored facts with a forbidden-word list, and separate requested from merely nearby held ZIPs. | The roadmap's definition: factual statements the salesperson can make; no claims about leads, cost or results. |
+| 2026-09-29 | Workspace built as a FastAPI-served static app with vendored Leaflet and no build step. | Keeps the one-language, one-process deployment; a polished UI does not need a bundler. |
+| 2026-09-29 | Stored polygons are simplified (0.0005 degrees); the map queries by stored bounding boxes; viewports over 4 degrees are refused. | Keeps payloads small and queries cheap on SQLite without vector tiles or PostGIS. |
+| 2026-09-29 | Custom groupings are evaluated live but never written; saving needs a clean evaluation (`can_save`) and creates only a PROPOSED territory. | The map recommends; a named approver still reserves. |

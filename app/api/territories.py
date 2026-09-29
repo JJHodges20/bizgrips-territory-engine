@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import SessionDep
 from app.config import get_business_rules
 from app.enums import TerritoryStatus
-from app.repositories.market_graph import load_market_graph
+from app.repositories.market_graph import load_market_graph, load_market_graph_for_zips
 from app.repositories.registry import load_snapshot
 from app.schemas.registry import (
     ActivateRequest,
@@ -29,7 +29,13 @@ from app.schemas.registry import (
     TerritoryListResponse,
     TerritoryResponse,
 )
-from app.schemas.territory import TerritoryProposal, TerritoryRequest
+from app.schemas.territory import (
+    GroupEvaluateRequest,
+    GroupEvaluation,
+    TerritoryProposal,
+    TerritoryRequest,
+)
+from app.services.group_evaluator import evaluate_group
 from app.services.market import MarketGraph
 from app.services.registry import InvalidProposal, RegistryService
 from app.services.territory_generator import generate_territory
@@ -93,6 +99,28 @@ def propose_territory(
         session.commit()
         proposal.territory_id = record.territory_id
     return proposal
+
+
+@router.post("/evaluate", response_model=GroupEvaluation)
+def evaluate_selection(
+    session: SessionDep, body: GroupEvaluateRequest, as_of: date | None = AS_OF
+) -> GroupEvaluation:
+    """Score a hand-picked ZIP grouping (map selection) like a territory; writes nothing."""
+    rules = get_business_rules()
+    effective_as_of = as_of or datetime.now(UTC).date()
+    market = load_market_graph_for_zips(
+        session, body.zips, rules.serviceability.default_service_radius_miles, rules
+    )
+    registry = load_snapshot(session, effective_as_of)
+    return evaluate_group(
+        body.zips,
+        market,
+        registry,
+        rules,
+        effective_as_of,
+        size_class=body.size_class,
+        client_id=body.client_id,
+    )
 
 
 @router.post("", response_model=TerritoryResponse, status_code=201)

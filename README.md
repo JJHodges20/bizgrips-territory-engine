@@ -18,7 +18,8 @@ The engine recommends; a human approves.
 | 5 | Territory generator | Done |
 | 6 | Conflict checker | Done |
 | 7 | Sales-call market checker | Done |
-| 8+ | Map, onboarding/n8n, Meta, performance learning | Later |
+| 8 | Territory workspace: registry board, map with custom groupings, sales check UI | Done |
+| 9-11 | Onboarding/n8n, Meta, performance learning | On hold |
 
 See `docs/IMPLEMENTATION_STATUS.md` for the live state and `docs/MILESTONES.md` for specs.
 
@@ -43,8 +44,29 @@ Or use the task runner: `.\dev.ps1 setup`, `.\dev.ps1 test`, `.\dev.ps1 dev`.
 
 macOS / Linux / CI: `make setup && make test && make dev`.
 
-The API then answers at http://127.0.0.1:8000 (`/docs` for the interactive reference, `/sales`
-for the internal sales-call page).
+The API then answers at http://127.0.0.1:8000. Open http://127.0.0.1:8000/app for the
+**Territory Workspace** (registry board, map, sales check); `/docs` is the interactive API
+reference and `/sales` a plain server-rendered fallback of the sales check.
+
+## Territory workspace (Milestone 8)
+
+`app/static/` is a single-page app served at `/app`: plain ES modules, vendored Leaflet, no
+build step. Three views share one design system:
+
+- **Registry** — every territory with status, flags (expired reservation, release due), client,
+  ZIP count and dates; filters and search; a detail drawer with ZIPs, audit trail and
+  exceptions; every registry transition as a form; manual "New territory"; "Run sweep".
+- **Map** — ZIP areas coloured by availability or market tier, hover details, search-and-fly,
+  click to build a custom grouping that is scored live (score, tier, Opportunity Units,
+  contiguity, conflicts, target band); "Generate from…" runs the generator; "Save as proposal"
+  creates a PROPOSED territory. `#/map?territory=T-000001` highlights a territory.
+- **Sales check** — the market checker with talking points, statistics and the suggested
+  territory, plus "Show on map" and "Save as proposal".
+
+The header's *as of* date and *client id* apply to every view. Map polygons need
+`scripts/import_geography.py --with-geometry` (already part of `make import-data` from this
+milestone on). Tiles come from OpenStreetMap by default; change `tileUrl` in
+`app/static/config.js` for heavier use. There is no login yet: keep it on the internal network.
 
 | Endpoint | Returns |
 |----------|---------|

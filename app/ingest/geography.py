@@ -46,6 +46,9 @@ class ZctaGeography:
     land_area_sq_miles: float
     water_area_sq_miles: float
     geometry_geojson: str | None = None
+    bbox: tuple[float, float, float, float] | None = (
+        None  # WGS84 min_lon, min_lat, max_lon, max_lat
+    )
 
 
 @dataclass(frozen=True, order=True)
@@ -96,6 +99,7 @@ def compute_geography(
     land_column: str = DEFAULT_LAND_COLUMN,
     water_column: str = DEFAULT_WATER_COLUMN,
     with_geometry: bool = False,
+    simplify_tolerance: float = 0.0005,
 ) -> list[ZctaGeography]:
     """Centroid (WGS84) and land/water area in square miles for every ZCTA.
 
@@ -116,7 +120,12 @@ def compute_geography(
     points = np.where(inside, centroids.to_numpy(), representative.to_numpy())
     lonlat = gpd.GeoSeries(points, crs=EQUAL_AREA_CRS).to_crs(WGS84)
     areas_m2 = geoms.area.to_numpy()
-    wgs_geoms = gdf.to_crs(WGS84).geometry.to_numpy() if with_geometry else None
+    wgs = gdf.to_crs(WGS84).geometry
+    bounds = wgs.bounds.to_numpy()  # minx, miny, maxx, maxy per row
+    wgs_geoms = None
+    if with_geometry:
+        simplified = wgs.simplify(simplify_tolerance, preserve_topology=True)
+        wgs_geoms = simplified.to_numpy()
 
     codes = gdf[zcta_column].astype(str).to_numpy()
     land_attr = gdf[land_column].to_numpy() if land_column in gdf.columns else None
@@ -135,6 +144,7 @@ def compute_geography(
                 land_area_sq_miles=land_m2 / SQ_METRES_PER_SQ_MILE,
                 water_area_sq_miles=water_m2 / SQ_METRES_PER_SQ_MILE,
                 geometry_geojson=shapely.to_geojson(wgs_geoms[i]) if with_geometry else None,
+                bbox=tuple(float(v) for v in bounds[i]),  # type: ignore[arg-type]
             )
         )
     out.sort(key=lambda g: g.zcta)

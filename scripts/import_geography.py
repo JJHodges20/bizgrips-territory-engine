@@ -90,6 +90,12 @@ def main(argv: list[str] | None = None) -> int:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("--with-geometry", action="store_true", help="also store GeoJSON polygons")
+    parser.add_argument(
+        "--simplify-tolerance",
+        type=float,
+        default=0.0005,
+        help="Douglas-Peucker tolerance in degrees for stored polygons (default 0.0005)",
+    )
     parser.add_argument("--refresh", action="store_true", help="re-download cached source files")
     parser.add_argument("--dry-run", action="store_true", help="print the plan and exit 0")
     parser.add_argument("--raw-dir", default=None, help="override data/raw")
@@ -119,7 +125,9 @@ def main(argv: list[str] | None = None) -> int:
 
     gdf = load_boundaries(boundary_layer(boundaries.path))
     print(f"Loaded {len(gdf):,} ZCTA polygons ({time.perf_counter() - started:.1f}s)")
-    geography = compute_geography(gdf, with_geometry=args.with_geometry)
+    geography = compute_geography(
+        gdf, with_geometry=args.with_geometry, simplify_tolerance=args.simplify_tolerance
+    )
     adjacency = compute_adjacency(gdf)
     degrees = adjacency_degrees(adjacency)
     print(

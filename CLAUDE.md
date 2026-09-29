@@ -8,11 +8,11 @@ requires a named human to approve before a territory becomes protected.
 Master roadmap: `docs/ROADMAP_V1.1.md`.
 
 ## Current milestone
-Milestones 0-7 are complete: the whole V1 (specifications, public data ingestion, ZCTA read
-API, scoring + Opportunity Units, territory registry, territory generator, conflict checker,
-sales-call market checker with the internal `/sales` page). Milestones 8-11 (map, onboarding
-and n8n hooks, Meta provisioning, performance learning) need specs before any code. Always
-read `docs/IMPLEMENTATION_STATUS.md` first.
+Milestones 0-8 are complete: V1 (specifications, ingestion, ZCTA API, scoring, registry,
+generator, conflict checker, market checker) plus the Territory Workspace UI (`/app`: registry
+board, map with custom groupings, sales check). Milestones 9-11 (onboarding/n8n, Meta,
+performance learning) are on hold until BizGrips brings them forward. Always read
+`docs/IMPLEMENTATION_STATUS.md` first.
 
 ## Read these before changing territory logic
 1. `docs/BIZGRIPS_TERRITORY_STANDARD.md` — the business rules the software enforces
@@ -99,6 +99,10 @@ Direct equivalents: `venv/Scripts/python.exe -m pytest -q`, `... -m ruff check .
 - Tests use scenario fixtures from `data/fixtures/`. Add or extend a scenario before changing
   generator behaviour, and record expected behaviour in `docs/TEST_MARKETS.md`.
 - ruff, line length 100, type hints throughout `app/`.
+- Front-end (`app/static/`): plain ES modules, no build step, vendored libraries only. Keep
+  syntax within what `esprima` parses (no optional chaining `?.`, no `??`, no optional catch
+  binding); `tests/test_map_api.py` parses every module. UI must stay polished and complete
+  (design tokens in `css/styles.css`, badges, drawers, modals, empty and loading states).
 - Commit at milestone boundaries with `docs/IMPLEMENTATION_STATUS.md` updated.
 
 ## Constraints

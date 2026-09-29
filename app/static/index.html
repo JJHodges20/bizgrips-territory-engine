@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BizGrips Territory Workspace</title>
+  <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <div class="shell">
+    <nav class="rail" aria-label="Primary">
+      <div class="brand">
+        <div class="brand-mark">BG</div>
+        <div class="brand-text"><strong>BizGrips</strong><span>Territory Workspace</span></div>
+      </div>
+      <a class="rail-link" href="#/registry" data-route="registry">
+        <span class="rail-icon">&#9776;</span><span>Registry</span>
+      </a>
+      <a class="rail-link" href="#/map" data-route="map">
+        <span class="rail-icon">&#9673;</span><span>Map</span>
+      </a>
+      <a class="rail-link" href="#/sales" data-route="sales">
+        <span class="rail-icon">&#9742;</span><span>Sales check</span>
+      </a>
+      <div class="rail-spacer"></div>
+      <a class="rail-link rail-link-muted" href="/docs" target="_blank" rel="noopener">
+        <span class="rail-icon">&#9881;</span><span>API docs</span>
+      </a>
+      <div class="rail-foot" id="rail-foot">internal use</div>
+    </nav>
+    <div class="frame">
+      <header class="topbar">
+        <h1 id="view-title">Registry</h1>
+        <div class="topbar-controls">
+          <label class="control">
+            <span>As of</span>
+            <input type="date" id="ctx-as-of" title="Registry date used for every check">
+          </label>
+          <label class="control">
+            <span>Prospect / client id</span>
+            <input type="text" id="ctx-client-id" placeholder="optional, e.g. C-ALPHA" maxlength="64">
+          </label>
+        </div>
+      </header>
+      <main id="view" class="view" aria-live="polite"></main>
+    </div>
+  </div>
+  <aside id="drawer" class="drawer" hidden></aside>
+  <div id="modal-root"></div>
+  <div id="toasts" class="toasts" aria-live="assertive"></div>
+  <script src="/static/vendor/leaflet/leaflet.js"></script>
+  <script src="/static/config.js"></script>
+  <script type="module" src="/static/js/main.js"></script>
+</body>
+</html>

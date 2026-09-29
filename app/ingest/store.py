@@ -22,6 +22,10 @@ GEOGRAPHY_FIELDS = (
     "land_area_sq_miles",
     "water_area_sq_miles",
     "geometry_geojson",
+    "bbox_min_lon",
+    "bbox_min_lat",
+    "bbox_max_lon",
+    "bbox_max_lat",
 )
 STATE_FIELDS = ("state", "state_fips")
 PLACE_FIELDS = ("postal_zip", "primary_city")
@@ -200,6 +204,10 @@ def write_geography(
                 "land_area_sq_miles": geo.land_area_sq_miles,
                 "water_area_sq_miles": geo.water_area_sq_miles,
                 "geometry_geojson": geo.geometry_geojson,
+                "bbox_min_lon": geo.bbox[0] if geo.bbox else None,
+                "bbox_min_lat": geo.bbox[1] if geo.bbox else None,
+                "bbox_max_lon": geo.bbox[2] if geo.bbox else None,
+                "bbox_max_lat": geo.bbox[3] if geo.bbox else None,
                 "state": state,
                 "state_fips": state_fips,
                 "postal_zip": place.postal_code if place else None,

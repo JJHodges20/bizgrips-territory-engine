@@ -35,6 +35,11 @@ class ZctaMarket(Base):
     land_area_sq_miles: Mapped[float | None] = mapped_column(Float)
     water_area_sq_miles: Mapped[float | None] = mapped_column(Float)
     geometry_geojson: Mapped[str | None] = mapped_column(Text)
+    # WGS84 bounding box of the boundary (Milestone 8 map viewport queries)
+    bbox_min_lon: Mapped[float | None] = mapped_column(Float)
+    bbox_min_lat: Mapped[float | None] = mapped_column(Float)
+    bbox_max_lon: Mapped[float | None] = mapped_column(Float)
+    bbox_max_lat: Mapped[float | None] = mapped_column(Float)
 
     # Households
     total_population: Mapped[int | None] = mapped_column(Integer)
@@ -77,6 +82,7 @@ class ZctaMarket(Base):
 
     __table_args__ = (
         Index("ix_zcta_markets_city_state", "primary_city", "state"),
+        Index("ix_zcta_markets_bbox", "bbox_min_lat", "bbox_max_lat", "bbox_min_lon"),
         CheckConstraint("length(zcta) = 5", name="zcta_five_digits"),
     )
 

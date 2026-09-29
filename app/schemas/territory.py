@@ -190,3 +190,49 @@ class TerritoryProposal(StrictSchema):
         payload = self.model_dump(mode="json", exclude={"territory_id"})
         canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+# ---- custom groupings (Milestone 8) -----------------------------------------------------------
+
+
+class GroupEvaluateRequest(StrictSchema):
+    zips: list[str] = Field(min_length=1, max_length=200)
+    client_id: str | None = Field(default=None, max_length=64)
+    size_class: TerritorySizeClass | None = None
+
+
+class GroupZip(StrictSchema):
+    zcta: str
+    primary_city: str | None = None
+    state: str | None = None
+    tier: str
+    score: float | None = None
+    opportunity_units: float | None = None
+    owner_occupied_households: int | None = None
+    availability: str
+    blocking_territory_id: str | None = None
+    blocking_client: str | None = None
+    unserviceable: bool = False
+
+
+class GroupEvaluation(StrictSchema):
+    """A hand-picked ZIP grouping scored like a territory (never written to the registry)."""
+
+    zips: list[str]
+    unknown_zips: list[str] = Field(default_factory=list)
+    size_class: TerritorySizeClass
+    as_of: date
+    rules_version: str
+    aggregates: ProposalAggregates | None = None
+    target: TargetInfo | None = None
+    contiguous: bool
+    components: list[list[str]] = Field(default_factory=list)
+    conflicts: ConflictResult
+    per_zip: list[GroupZip] = Field(default_factory=list)
+    flags: list[str] = Field(default_factory=list)
+    can_save: bool
+    approval_required: bool = True
+    disclaimer: str = (
+        "Comparative indices from public Census data and configured rules; not a prediction "
+        "or guarantee of marketing performance. A named person must approve any territory."
+    )

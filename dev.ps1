@@ -38,7 +38,7 @@ switch ($Target) {
         Invoke-Py scripts/seed_fixtures.py --scenario $scenario
     }
     "import-data" {
-        Invoke-Py scripts/import_geography.py
+        Invoke-Py scripts/import_geography.py --with-geometry
         Invoke-Py scripts/import_census.py
     }
     "clean" {
