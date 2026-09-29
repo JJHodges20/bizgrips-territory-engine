@@ -4,10 +4,11 @@ Read this first in every session. Update it at the end of every session.
 
 ## Current milestone
 
-**Milestone 4 — Territory registry: complete (2026-09-29).**
-Next up: **Milestone 5 — Territory generator** (spec in `MILESTONES.md`, algorithm in
-`TERRITORY_ALGORITHM.md` section 1). Plan first; it consumes the registry snapshot, the score
-cache and the adjacency graph built so far.
+**Milestone 5 — Territory generator: complete (2026-09-29).**
+Next up: **Milestone 6 — Conflict checker** (spec in `MILESTONES.md`, algorithm in
+`TERRITORY_ALGORITHM.md` section 2). Plan first; `app/services/conflicts.py` already holds the
+classification core, so the milestone is replacement suggestions, the endpoint and scenario
+2/9 checker tests.
 
 ## Completed
 
@@ -103,7 +104,34 @@ B25038) recorded as a V2 candidate.
   then the ZIPs are re-reserved), the full lifecycle with dates and audit trail, reserve-time
   conflicts, exceptions, due-release completion, and the endpoints; 104 tests pass.
 
+### Milestone 5 (2026-09-29)
+
+- `app/services/territory_generator.py::generate_territory`: start resolution (NO_MARKET_DATA
+  / START_ZIP_UNAVAILABLE with nearest available suggestions), requested-ZIP seeding with
+  deferral, frontier expansion in the fixed priority order (availability, contiguity,
+  serviceability, score minus 1.5 points per mile, target band with 10% tolerance), exclusion
+  reasons, aggregates via `score_territory`, target status and flags, one explanation line per
+  included ZCTA plus one per exclusion.
+- `app/services/market.py::MarketGraph` (records, adjacency, live scores, haversine distances,
+  components) built from fixture grids or by `app/repositories/market_graph.py` (bounding box
+  around the start, 1.5x the radius); `app/services/conflicts.py` classifies requested ZIPs
+  (available / reserved / protected / pending / own / unknown, contiguity) and ranks nearest
+  available ZCTAs.
+- `POST /territories/propose` (`?persist=true` records the PROPOSED territory with the
+  proposal as its generation snapshot; a FAILED proposal is a normal 200).
+- Tests: every generator scenario's `expected` block is executed as assertions (1, 3, 4, 5, 6,
+  7, 8), start-ZIP failure with suggestions (2), NO_MARKET_DATA, determinism over 100 runs and
+  across a separate Python process (fingerprint), endpoint tests; 116 tests pass. Scenario 5
+  now requests the unscored ZIPs so their UNSCORED exclusion is observable.
+- Real data: a Standard proposal from 80123 takes about 0.1 s (3 ZCTAs, 22,290 OU, Tier A);
+  from 82633 (Douglas, WY) the proposal stops at the start ZIP with UNSERVICEABLE_LAND_AREA
+  and BELOW_MINIMUM_VIABLE, as designed.
+
 ## Known issues / open questions
+
+- The dev database still contains the fixture territories seeded in Milestone 0 (for example
+  a RESERVED T-000002 on 80127/80129), so real proposals around Littleton exclude 80127 as
+  BLOCKED_RESERVED. Cancel them through the API or reseed with `--replace` before demos.
 
 - The registry has no authentication yet; `approved_by` is a trusted string. Access control
   is a deployment concern to settle before sales staff use the write endpoints (Milestone 8+).
@@ -143,10 +171,10 @@ B25038) recorded as a V2 candidate.
 
 ## Next task
 
-Milestone 5, step 1: `app/services/generator.py` frontier expansion over the adjacency graph
-(`TerritoryRequest` -> `TerritoryProposal`) with the priority order and tie-breakers from
-`TERRITORY_ALGORITHM.md` section 1, using `RegistryService.availability` for exclusions and
-the cached scores/OU; prove scenarios 1, 3, 4, 6, 7 and 8 before adding the endpoint.
+Milestone 6, step 1: `check_conflicts` in `app/services/conflicts.py` = `classify_zips` plus
+replacement suggestions (nearest available ZCTAs adjacent to a non-conflicting requested ZIP,
+ranked by distance then score, up to `generator.replacement_suggestions`), then
+`POST /conflicts/check`, proven on scenarios 2 and 9.
 
 ## Decisions log
 
@@ -175,3 +203,6 @@ the cached scores/OU; prove scenarios 1, 3, 4, 6, 7 and 8 before adding the endp
 | 2026-09-29 | A proposal containing another client's blocked ZIP is refused, and the check repeats at reservation. | Proposals never carry known conflicts; state can change between proposal and reservation. |
 | 2026-09-29 | Due releases (PENDING_RELEASE past `release_date`) complete automatically when touched or swept; expired reservations never do. | Standard section 11 makes the release date the event; section 8 keeps expiry a human decision. |
 | 2026-09-29 | `as_of` is an explicit parameter of every registry action; the API defaults it to today (UTC). | Deterministic tests and back-dated actions without clock reads inside services. |
+| 2026-09-29 | Requested ZIPs must be scored, like frontier ZIPs; an unscored requested ZIP is excluded UNSCORED. | Sizing relies on OU; an unscored ZIP would silently add zero opportunity. |
+| 2026-09-29 | `excluded` lists only ZCTAs that were on the frontier or requested; neighbours never reached are absent. | Reasons are only given for ZCTAs the algorithm actually evaluated; scenario 5 was adjusted to request the unscored ZIPs. |
+| 2026-09-29 | Proposals are not stored unless `persist=true`; the stored snapshot is the full proposal JSON. | Sales can explore freely; only a deliberate step creates registry state, and the approved list keeps its explanation. |

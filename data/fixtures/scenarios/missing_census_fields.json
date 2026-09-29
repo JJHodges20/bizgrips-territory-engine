@@ -4,10 +4,26 @@
   "grid": "denver_suburban",
   "as_of": "2026-09-29",
   "zcta_overrides": {
-    "80124": {"median_household_income": null},
-    "80126": {"total_housing_units": null, "homes_built_before_2000": null, "homes_built_before_1990": null, "homes_built_before_1980": null},
-    "80112": {"owner_occupied_households": null, "renter_occupied_households": null, "owner_households_age_45_plus": null, "owner_households_age_55_plus": null, "owner_households_age_65_plus": null},
-    "80130": {"total_households": null, "renter_occupied_households": null}
+    "80124": {
+      "median_household_income": null
+    },
+    "80126": {
+      "total_housing_units": null,
+      "homes_built_before_2000": null,
+      "homes_built_before_1990": null,
+      "homes_built_before_1980": null
+    },
+    "80112": {
+      "owner_occupied_households": null,
+      "renter_occupied_households": null,
+      "owner_households_age_45_plus": null,
+      "owner_households_age_55_plus": null,
+      "owner_households_age_65_plus": null
+    },
+    "80130": {
+      "total_households": null,
+      "renter_occupied_households": null
+    }
   },
   "territories": [],
   "requests": [
@@ -18,14 +34,52 @@
       "client_name": "Gap Aware Baths",
       "expected": {
         "status": "PROPOSED",
-        "excluded_reasons": {"80112": "UNSCORED", "80130": "UNSCORED"},
+        "includes": [
+          "80123",
+          "80124"
+        ],
+        "excludes": [
+          "80112",
+          "80130"
+        ],
+        "requested_reasons": {
+          "80124": "REQUESTED"
+        },
+        "excluded_reasons": {
+          "80112": "UNSCORED",
+          "80130": "UNSCORED"
+        },
         "scoring": {
-          "80124": {"missing_components": ["purchasing_power"], "data_completeness": 0.85},
-          "80126": {"missing_components": ["housing_age"], "data_completeness": 0.80, "missing_factors": ["housing_age"]},
-          "80112": {"tier": "U", "unscored_reason": "MISSING_REQUIRED_OWNER_CONCENTRATION", "opportunity_units": null},
-          "80130": {"tier": "U"}
+          "80124": {
+            "missing_components": [
+              "purchasing_power"
+            ],
+            "data_completeness": 0.85
+          },
+          "80126": {
+            "missing_components": [
+              "housing_age"
+            ],
+            "data_completeness": 0.8,
+            "missing_factors": [
+              "housing_age"
+            ]
+          },
+          "80112": {
+            "tier": "U",
+            "unscored_reason": "MISSING_REQUIRED_OWNER_CONCENTRATION",
+            "opportunity_units": null
+          },
+          "80130": {
+            "tier": "U"
+          }
         }
-      }
+      },
+      "requested_zips": [
+        "80124",
+        "80112",
+        "80130"
+      ]
     }
   ],
   "expected_behavior": [
@@ -33,6 +87,6 @@
     "Missing housing-age fields renormalise weights over 80% and use a neutral OU housing factor, flagged.",
     "Missing owner households makes a ZCTA unscored (tier U) with OU None.",
     "Missing total households makes the required owner-concentration component unavailable, so the ZCTA is unscored.",
-    "Unscored ZCTAs are never auto-selected by the generator."
+    "Unscored ZCTAs are never auto-selected by the generator; when a prospect requests one it is excluded with reason UNSCORED."
   ]
 }

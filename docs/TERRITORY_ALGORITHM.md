@@ -108,6 +108,25 @@ Example explanation lines:
 - "80128 selected: keeps contiguity and moves the territory toward the Standard target (26,400 of 20,000–32,000 OU)."
 - "80129 excluded: ACTIVE_PROTECTED for territory T-000001."
 
+### Implementation notes (Milestone 5, 2026-09-29)
+
+- `app/services/territory_generator.py::generate_territory`; market data as
+  `app/services/market.py::MarketGraph` (records, rook adjacency, live scores, centroid
+  distances by haversine); conflicts of requested ZIPs via `app/services/conflicts.py`.
+- Additional exclusion reason `NO_MARKET_DATA` for a requested code with no record; additional
+  flags `CONTAINS_UNSERVICEABLE` (any member over the land cap; `UNSERVICEABLE_LAND_AREA` marks
+  the start itself), `NO_CANDIDATE_FITS_BAND`, `MAX_ZCTAS_REACHED`, `RADIUS_CLAMPED` (a
+  requested radius above the maximum is clamped).
+- Requested ZIPs must also be scored (tier not U); an unscored requested ZIP is excluded
+  `UNSCORED`, the same rule that keeps unscored ZCTAs off the frontier.
+- Only ZCTAs that were on the frontier or requested appear in `excluded`; a neighbour the loop
+  never reached before the target was met is simply absent.
+- The explanation carries one line per included ZCTA (in selection order) followed by one
+  line per exclusion; `POST /territories/propose?persist=true` stores the proposal as the
+  PROPOSED territory's `generation_snapshot_json`.
+- `TerritoryProposal.fingerprint()` (sha256 of the canonical JSON) is what the determinism
+  test compares across 100 runs and across processes.
+
 ## 2. Conflict checker
 
 ### Inputs

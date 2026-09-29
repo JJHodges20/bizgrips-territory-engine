@@ -15,6 +15,8 @@ from sqlalchemy.orm import Session
 from app.api.deps import SessionDep
 from app.config import get_business_rules
 from app.enums import TerritoryStatus
+from app.repositories.market_graph import load_market_graph
+from app.repositories.registry import load_snapshot
 from app.schemas.registry import (
     ActivateRequest,
     ActorRequest,
@@ -27,7 +29,10 @@ from app.schemas.registry import (
     TerritoryListResponse,
     TerritoryResponse,
 )
-from app.services.registry import RegistryService
+from app.schemas.territory import TerritoryProposal, TerritoryRequest
+from app.services.market import MarketGraph
+from app.services.registry import InvalidProposal, RegistryService
+from app.services.territory_generator import generate_territory
 
 router = APIRouter(prefix="/territories", tags=["registry"])
 
@@ -47,6 +52,47 @@ def _transition(
     record = getattr(service, action)(territory_id, **kwargs)
     session.commit()
     return service.response(record)
+
+
+@router.post("/propose", response_model=TerritoryProposal)
+def propose_territory(
+    session: SessionDep,
+    body: TerritoryRequest,
+    as_of: date | None = AS_OF,
+    persist: bool = Query(False, description="also create the PROPOSED territory record"),
+) -> TerritoryProposal:
+    """Generate a contiguous, conflict-free territory recommendation from a starting ZIP.
+
+    Nothing is written unless ``persist=true`` (then a PROPOSED record is created; a named
+    approver still has to reserve it). A FAILED proposal is a normal 200 response.
+    """
+    rules = get_business_rules()
+    effective_as_of = as_of or datetime.now(UTC).date()
+    radius = min(
+        body.max_service_distance_miles or rules.serviceability.default_service_radius_miles,
+        rules.serviceability.max_service_radius_miles,
+    )
+    market = load_market_graph(session, body.starting_zip, radius, rules)
+    if market is None:
+        market = MarketGraph.build([], [], rules)
+    registry = load_snapshot(session, effective_as_of)
+    proposal = generate_territory(body, market, registry, rules, effective_as_of)
+    if persist and proposal.status == "PROPOSED":
+        if not body.client_id:
+            raise InvalidProposal("CLIENT_ID_REQUIRED", "persist=true needs a client_id")
+        service = make_service(session, effective_as_of)
+        record = service.create_proposal(
+            client_id=body.client_id,
+            client_business_name=body.client_name,
+            starting_zip=body.starting_zip,
+            size_class=proposal.size_class,
+            zips=proposal.zip_codes,
+            notes="generated proposal",
+            snapshot=proposal.model_dump(mode="json"),
+        )
+        session.commit()
+        proposal.territory_id = record.territory_id
+    return proposal
 
 
 @router.post("", response_model=TerritoryResponse, status_code=201)

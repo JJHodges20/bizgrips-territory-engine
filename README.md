@@ -15,8 +15,8 @@ The engine recommends; a human approves.
 | 2 | ZIP/ZCTA data API | Done |
 | 3 | Opportunity scoring + Opportunity Units | Done |
 | 4 | Territory registry | Done |
-| 5 | Territory generator | Next |
-| 6 | Conflict checker | Planned |
+| 5 | Territory generator | Done |
+| 6 | Conflict checker | Next |
 | 7 | Sales-call market checker | Planned |
 | 8+ | Map, onboarding/n8n, Meta, performance learning | Later |
 
@@ -54,6 +54,7 @@ The API then answers at http://127.0.0.1:8000 (`/docs` for the interactive refer
 | `GET /zctas/{zcta}/neighbors` | rook-adjacent ZCTAs with shared boundary length |
 | `GET /zctas/{zcta}/score` | live Opportunity Score, tier, components, Opportunity Units, plus the cached values |
 | `GET /imports`, `GET /imports/fields` | import runs and which import last wrote each field |
+| `POST /territories/propose` | generate a contiguous, conflict-free territory from a starting ZIP (`?persist=true` also records it as PROPOSED) |
 | `POST /territories`, `GET /territories`, `GET /territories/{id}` | create a PROPOSED territory from a ZIP list; list/inspect with expiry flags |
 | `POST /territories/{id}/reserve` · `/extend` · `/activate` · `/cancel` · `/pending-release` · `/release` · `/exceptions` | registry transitions (Standard sections 8-11); approver required for RESERVED and ACTIVE_PROTECTED |
 | `GET /zips/{zip}/availability?client_id=` | AVAILABLE or the blocking assignment, client and flags (RESERVATION_EXPIRED, RELEASE_DUE) |

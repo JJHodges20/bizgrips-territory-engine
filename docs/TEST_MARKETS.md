@@ -94,9 +94,10 @@ owner_households_age_45_plus = null; 80130 total_households = null.
 **Expected scoring:** 80124 scored with purchasing_power missing, data_completeness 0.85,
 weights renormalised; 80126 scored with housing_age missing (completeness 0.80), OU uses
 neutral housing factor and lists missing_factors [housing_age]; 80112 unscored (U,
-MISSING_REQUIRED_OWNER_CONCENTRATION), OU None; 80130 unscored (INSUFFICIENT_HOUSEHOLDS /
-missing required component). Generator from 80123 never selects 80112 or 80130 (excluded
-UNSCORED) but can select 80124 and 80126.
+MISSING_REQUIRED_OWNER_CONCENTRATION), OU None; 80130 unscored (INSUFFICIENT_HOUSEHOLDS). Request: start 80123, STANDARD, requested_zips
+[80124, 80112, 80130]. The generator adds 80124 (REQUESTED, scored with a renormalised
+weight set), never selects 80112 or 80130 and, because they were requested, lists both in
+excluded with reason UNSCORED; it may still select 80126.
 
 ## Scenario 6 — `disconnected_request`
 
