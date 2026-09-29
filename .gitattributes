@@ -1,0 +1,7 @@
+# Normalise line endings so Windows and Unix checkouts produce identical diffs.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.png binary
+*.zip binary
+*.db binary
