@@ -4,10 +4,12 @@ Read this first in every session. Update it at the end of every session.
 
 ## Current milestone
 
-**Milestone 6 — Conflict checker: complete (2026-09-29).**
-Next up: **Milestone 7 — Sales-call market checker** (spec in `MILESTONES.md`, algorithm in
-`TERRITORY_ALGORITHM.md` section 3). Plan first; it composes the pieces that now exist
-(postal ZIP to ZCTA lookup, score, availability, conflict check, generator preview).
+**Milestone 7 — Sales-call market checker: complete (2026-09-29). V1 (Milestones 0-7) is
+complete.**
+Next up: Milestones 8-11 (map, onboarding / n8n hooks, Meta provisioning consumer, performance
+learning schema). Per the roadmap, each needs a written spec (inputs, outputs, rules, edge cases,
+acceptance, fixtures, out-of-scope) before implementation, and the map waits until the generator
+and registry are trusted in use. Suggested first step: a Milestone 8 spec in `MILESTONES.md`.
 
 ## Completed
 
@@ -143,7 +145,29 @@ B25038) recorded as a V2 candidate.
 - Real data: a five-ZIP check around Littleton answers in about 0.1 s and names the fixture
   reservation still present in the dev database.
 
+### Milestone 7 (2026-09-29)
+
+- `app/services/market_checker.py::check_market` (pure): resolves one input (starting ZIP,
+  pasted list, or city + state), runs the conflict checker and the generator, and assembles
+  the sales view: availability (AVAILABLE / PARTIALLY_AVAILABLE / UNAVAILABLE / NO_MARKET_DATA),
+  suggested territory, available / reserved / protected / pending lists with client names
+  (internal), replacement ZIPs, market statistics and factual talking points.
+- `POST /market/check` and the internal page `GET /sales` (`app/api/sales_page.py`,
+  server-rendered HTML, one input box, no JavaScript); free text is parsed as a ZIP, a ZIP list
+  or "City, ST".
+- Wording review: `FORBIDDEN_WORDS` never appear in talking points and every real view ends
+  with the approval reminder and the no-guarantee disclaimer; enforced by tests.
+- Tests: starting ZIP available, blocked start with alternatives, pasted list partially
+  available, city query from the highest-OU ZCTA, no-market-data paths, query validation,
+  free-text parsing, the JSON endpoint (well under a second), the HTML page including escaping;
+  131 tests pass.
+- Real data: 80123, a pasted Akron list and "Chandler, AZ" each answer in under 0.1 s with a
+  Standard-band territory and seven talking points.
+
 ## Known issues / open questions
+
+- The `/sales` page has no authentication and shows client names on conflicts; it is for the
+  internal network only until access control is added (see the registry note below).
 
 - The dev database still contains the fixture territories seeded in Milestone 0 (for example
   a RESERVED T-000002 on 80127/80129), so real proposals around Littleton exclude 80127 as
@@ -187,10 +211,10 @@ B25038) recorded as a V2 candidate.
 
 ## Next task
 
-Milestone 7, step 1: `app/services/market_checker.py::check_market` (`MarketQuery` ->
-`MarketCheck`): map a pasted postal ZIP to its ZCTA (or NO_MARKET_DATA), return the score,
-tier, OU, availability with blocking details, the conflict result for any pasted list, and a
-quick generator preview, then `POST /market/check` for the sales-call flow.
+Write the Milestone 8 (map) spec in `MILESTONES.md` before any code: inputs (proposal or
+territory id), outputs (GeoJSON of ZCTAs with score/tier/status colouring, centroid markers),
+rules (read-only, no registry writes), edge cases (multipolygons, missing geometry), acceptance,
+fixtures. Geometry is available via `scripts/import_geography.py --with-geometry`.
 
 ## Decisions log
 
@@ -223,3 +247,5 @@ quick generator preview, then `POST /market/check` for the sales-call flow.
 | 2026-09-29 | `excluded` lists only ZCTAs that were on the frontier or requested; neighbours never reached are absent. | Reasons are only given for ZCTAs the algorithm actually evaluated; scenario 5 was adjusted to request the unscored ZIPs. |
 | 2026-09-29 | Proposals are not stored unless `persist=true`; the stored snapshot is the full proposal JSON. | Sales can explore freely; only a deliberate step creates registry state, and the approved list keeps its explanation. |
 | 2026-09-29 | Replacement suggestions must touch the non-conflicting part of the request (or the proposal); a lone blocked ZIP gets the nearest available ZCTAs instead. | A replacement is only useful if it keeps the territory contiguous; with nothing to touch, distance is the best guide. |
+| 2026-09-29 | Postal ZIP to ZCTA mapping is identity when a record exists; otherwise NO_MARKET_DATA. A pasted list starts from its first known code; a city query starts from its highest-OU ZCTA. | No postal crosswalk beyond ZCTAs exists in the free sources; the first pasted code and the strongest ZCTA are the least surprising anchors. |
+| 2026-09-29 | Talking points are generated only from stored facts with a forbidden-word list, and separate requested from merely nearby held ZIPs. | The roadmap's definition: factual statements the salesperson can make; no claims about leads, cost or results. |

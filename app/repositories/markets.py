@@ -103,3 +103,20 @@ def neighbour_rows(session: Session, zcta: str) -> list[tuple[ZctaMarket, float 
         .order_by(ZctaMarket.zcta)
     )
     return [(row, length) for row, length in session.execute(stmt)]
+
+
+def list_city_rows(session: Session, city: str, state: str) -> list[ZctaMarket]:
+    """ZCTAs whose primary city equals ``city`` in ``state`` (case-insensitive); when there is
+    no exact match, prefix matches are returned instead."""
+    exact = select(ZctaMarket).where(
+        func.lower(ZctaMarket.primary_city) == city.strip().lower(),
+        ZctaMarket.state == state.upper(),
+    )
+    rows = list(session.scalars(exact.order_by(ZctaMarket.zcta)))
+    if rows:
+        return rows
+    prefix = select(ZctaMarket).where(
+        func.lower(ZctaMarket.primary_city).like(city.strip().lower() + "%"),
+        ZctaMarket.state == state.upper(),
+    )
+    return list(session.scalars(prefix.order_by(ZctaMarket.zcta)))

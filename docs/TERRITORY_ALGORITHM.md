@@ -210,6 +210,26 @@ approval_required: true
 
 Target: a salesperson gets this in under a minute from one input.
 
+### Implementation notes (Milestone 7, 2026-09-29)
+
+- `app/services/market_checker.py::check_market` (pure) with `resolve_query`, `resolve_city`,
+  `market_stats` and `talking_points`; `app/api/market.py` loads the graph, registry snapshot
+  and city candidates, serves `POST /market/check`, and renders `GET /sales`
+  (`app/api/sales_page.py`, server-side HTML, no JavaScript).
+- Postal ZIP to ZCTA mapping is identity when a market record exists; otherwise the code is
+  reported under `resolution.unknown_zips` (PO-box and unique ZIPs have no ZCTA).
+- A pasted list starts from its first known code; all known codes become `requested_zips`.
+  City + state resolves to the ZCTAs whose primary city matches exactly (prefix match as a
+  fallback); the one with the most Opportunity Units becomes the starting ZIP.
+- `NO_MARKET_DATA` is a fourth availability value for inputs that resolve to nothing.
+- `UNAVAILABLE` returns no suggested territory; `market_stats` then describe the starting ZIP
+  alone and `replacement_zips` come from the generator's failure suggestions.
+- Reserved / protected / pending lists cover the requested ZIPs and every ZIP the generator
+  excluded as BLOCKED_*; talking points name requested and merely nearby held ZIPs separately.
+- Wording review: `FORBIDDEN_WORDS` (lead, cost, guarantee, expected, revenue, ...) never appear
+  in talking points; the disclaimer states that figures do not predict or guarantee marketing
+  performance. Tests enforce both.
+
 ## 4. Registry interaction (Milestone 4) — for reference
 
 The generator and checkers read a `RegistrySnapshot`. State changes go through

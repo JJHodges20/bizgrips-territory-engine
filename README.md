@@ -17,7 +17,7 @@ The engine recommends; a human approves.
 | 4 | Territory registry | Done |
 | 5 | Territory generator | Done |
 | 6 | Conflict checker | Done |
-| 7 | Sales-call market checker | Next |
+| 7 | Sales-call market checker | Done |
 | 8+ | Map, onboarding/n8n, Meta, performance learning | Later |
 
 See `docs/IMPLEMENTATION_STATUS.md` for the live state and `docs/MILESTONES.md` for specs.
@@ -43,7 +43,8 @@ Or use the task runner: `.\dev.ps1 setup`, `.\dev.ps1 test`, `.\dev.ps1 dev`.
 
 macOS / Linux / CI: `make setup && make test && make dev`.
 
-The API then answers at http://127.0.0.1:8000 (`/docs` for the interactive reference).
+The API then answers at http://127.0.0.1:8000 (`/docs` for the interactive reference, `/sales`
+for the internal sales-call page).
 
 | Endpoint | Returns |
 |----------|---------|
@@ -59,6 +60,8 @@ The API then answers at http://127.0.0.1:8000 (`/docs` for the interactive refer
 | `POST /territories/{id}/reserve` · `/extend` · `/activate` · `/cancel` · `/pending-release` · `/release` · `/exceptions` | registry transitions (Standard sections 8-11); approver required for RESERVED and ACTIVE_PROTECTED |
 | `GET /zips/{zip}/availability?client_id=` | AVAILABLE or the blocking assignment, client and flags (RESERVATION_EXPIRED, RELEASE_DUE) |
 | `POST /conflicts/check` | a ZIP list sorted into available / reserved / protected / pending / own / unknown, contiguity, and nearest available replacements for each conflict |
+| `POST /market/check` | the sales view from one input (starting ZIP, pasted ZIP list, or city + state): availability, suggested territory, ZIP lists with blocking clients, replacements, market statistics, talking points |
+| `GET /sales` | minimal internal HTML page: one input box, the full sales view (no JavaScript) |
 | `GET /registry/flags`, `POST /registry/sweep` | expired reservations and due releases; the sweep completes due releases only |
 
 Unknown ZCTAs answer 404 with `detail.code = NO_MARKET_DATA`.

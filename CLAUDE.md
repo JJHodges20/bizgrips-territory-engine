@@ -8,9 +8,11 @@ requires a named human to approve before a territory becomes protected.
 Master roadmap: `docs/ROADMAP_V1.1.md`.
 
 ## Current milestone
-Milestones 0-6 are complete (specifications, public data ingestion, ZCTA read API, scoring +
-Opportunity Units, territory registry, territory generator, conflict checker). Next:
-Milestone 7 (sales-call market checker). Always read `docs/IMPLEMENTATION_STATUS.md` first.
+Milestones 0-7 are complete: the whole V1 (specifications, public data ingestion, ZCTA read
+API, scoring + Opportunity Units, territory registry, territory generator, conflict checker,
+sales-call market checker with the internal `/sales` page). Milestones 8-11 (map, onboarding
+and n8n hooks, Meta provisioning, performance learning) need specs before any code. Always
+read `docs/IMPLEMENTATION_STATUS.md` first.
 
 ## Read these before changing territory logic
 1. `docs/BIZGRIPS_TERRITORY_STANDARD.md` — the business rules the software enforces
@@ -105,3 +107,5 @@ Direct equivalents: `venv/Scripts/python.exe -m pytest -q`, `... -m ruff check .
 - Canonical scoring and geography logic lives here, never only in n8n.
 - Scores and OU are comparative indices, not predictions or guarantees. Output wording must
   never imply otherwise.
+- Talking points (`app/services/market_checker.py`) state public-data facts only; the
+  `FORBIDDEN_WORDS` list is enforced by tests. Client names on conflicts are internal-use only.
