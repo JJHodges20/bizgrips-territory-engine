@@ -4,11 +4,10 @@ Read this first in every session. Update it at the end of every session.
 
 ## Current milestone
 
-**Milestone 5 — Territory generator: complete (2026-09-29).**
-Next up: **Milestone 6 — Conflict checker** (spec in `MILESTONES.md`, algorithm in
-`TERRITORY_ALGORITHM.md` section 2). Plan first; `app/services/conflicts.py` already holds the
-classification core, so the milestone is replacement suggestions, the endpoint and scenario
-2/9 checker tests.
+**Milestone 6 — Conflict checker: complete (2026-09-29).**
+Next up: **Milestone 7 — Sales-call market checker** (spec in `MILESTONES.md`, algorithm in
+`TERRITORY_ALGORITHM.md` section 3). Plan first; it composes the pieces that now exist
+(postal ZIP to ZCTA lookup, score, availability, conflict check, generator preview).
 
 ## Completed
 
@@ -127,6 +126,23 @@ B25038) recorded as a V2 candidate.
   from 82633 (Douglas, WY) the proposal stops at the start ZIP with UNSERVICEABLE_LAND_AREA
   and BELOW_MINIMUM_VIABLE, as designed.
 
+### Milestone 6 (2026-09-29)
+
+- `app/services/conflict_checker.py::check_conflicts`: classification (from Milestone 5's
+  `classify_zips`) plus replacement suggestions per conflicting ZIP, nearest first, then score,
+  limited to `generator.replacement_suggestions`, adjacent to the non-conflicting requested
+  ZIPs or to an explicit anchor. The generator now routes its requested-ZIP conflicts through
+  it with the proposal as anchor, so replacements touch the territory (scenario 9).
+- `POST /conflicts/check` with `app/repositories/market_graph.py::load_market_graph_for_zips`
+  (bounding box over the known codes); duplicates collapsed, unknown codes reported.
+- Tests: scenario 2 (protected ZIP, nearest replacements, own client not in conflict), scenario 9
+  (expired reservation flagged, replacements adjacent to 80123, reserving client named),
+  scenario 6 (contiguity and components, unknown codes), pending release past its date counts
+  as available, determinism, the endpoint; scenario 9 added to the generator scenario run and
+  scenario 6's fixture now carries its conflict-check expectation; 122 tests pass.
+- Real data: a five-ZIP check around Littleton answers in about 0.1 s and names the fixture
+  reservation still present in the dev database.
+
 ## Known issues / open questions
 
 - The dev database still contains the fixture territories seeded in Milestone 0 (for example
@@ -171,10 +187,10 @@ B25038) recorded as a V2 candidate.
 
 ## Next task
 
-Milestone 6, step 1: `check_conflicts` in `app/services/conflicts.py` = `classify_zips` plus
-replacement suggestions (nearest available ZCTAs adjacent to a non-conflicting requested ZIP,
-ranked by distance then score, up to `generator.replacement_suggestions`), then
-`POST /conflicts/check`, proven on scenarios 2 and 9.
+Milestone 7, step 1: `app/services/market_checker.py::check_market` (`MarketQuery` ->
+`MarketCheck`): map a pasted postal ZIP to its ZCTA (or NO_MARKET_DATA), return the score,
+tier, OU, availability with blocking details, the conflict result for any pasted list, and a
+quick generator preview, then `POST /market/check` for the sales-call flow.
 
 ## Decisions log
 
@@ -206,3 +222,4 @@ ranked by distance then score, up to `generator.replacement_suggestions`), then
 | 2026-09-29 | Requested ZIPs must be scored, like frontier ZIPs; an unscored requested ZIP is excluded UNSCORED. | Sizing relies on OU; an unscored ZIP would silently add zero opportunity. |
 | 2026-09-29 | `excluded` lists only ZCTAs that were on the frontier or requested; neighbours never reached are absent. | Reasons are only given for ZCTAs the algorithm actually evaluated; scenario 5 was adjusted to request the unscored ZIPs. |
 | 2026-09-29 | Proposals are not stored unless `persist=true`; the stored snapshot is the full proposal JSON. | Sales can explore freely; only a deliberate step creates registry state, and the approved list keeps its explanation. |
+| 2026-09-29 | Replacement suggestions must touch the non-conflicting part of the request (or the proposal); a lone blocked ZIP gets the nearest available ZCTAs instead. | A replacement is only useful if it keeps the territory contiguous; with nothing to touch, distance is the best guide. |

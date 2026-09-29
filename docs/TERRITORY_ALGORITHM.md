@@ -159,6 +159,22 @@ conflict_count, contiguous, components, suggestions: [{for_zcta, zcta, miles, sc
 
 Deterministic: same registry snapshot + same inputs ⇒ same output.
 
+### Implementation notes (Milestone 6, 2026-09-29)
+
+- `app/services/conflict_checker.py::check_conflicts` = `app/services/conflicts.py::classify_zips`
+  (available / reserved / protected / pending_release / own / unknown, contiguity, components,
+  RESERVATION_EXPIRED flags) plus replacement suggestions from `nearest_available`.
+- Suggestions are computed per conflicting ZIP (in code order), ranked by distance from that
+  ZIP, then score, then code, limited to `generator.replacement_suggestions` each. Candidates
+  must be available for the prospect, scored (not tier U), not over the land-area cap, not in
+  the request, and adjacent to an *anchor*: by default the non-conflicting requested ZIPs; the
+  generator passes its proposal so replacements touch the territory. With no anchor (a single
+  blocked ZIP), the nearest available ZCTAs are suggested without an adjacency condition.
+- Duplicate codes in the request are collapsed (order kept); `requested_count` counts unique
+  codes. `as_of` is carried by the registry snapshot; passing a different one raises.
+- `POST /conflicts/check` loads a market graph around all known codes in the list (bounding box
+  of their centroids expanded by 1.5x the default radius) and the full blocking snapshot.
+
 ## 3. Sales-call market checker
 
 ### Inputs (`MarketQuery`)

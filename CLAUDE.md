@@ -8,9 +8,9 @@ requires a named human to approve before a territory becomes protected.
 Master roadmap: `docs/ROADMAP_V1.1.md`.
 
 ## Current milestone
-Milestones 0-5 are complete (specifications, public data ingestion, ZCTA read API, scoring +
-Opportunity Units, territory registry, territory generator). Next: Milestone 6 (conflict
-checker). Always read `docs/IMPLEMENTATION_STATUS.md` first.
+Milestones 0-6 are complete (specifications, public data ingestion, ZCTA read API, scoring +
+Opportunity Units, territory registry, territory generator, conflict checker). Next:
+Milestone 7 (sales-call market checker). Always read `docs/IMPLEMENTATION_STATUS.md` first.
 
 ## Read these before changing territory logic
 1. `docs/BIZGRIPS_TERRITORY_STANDARD.md` — the business rules the software enforces

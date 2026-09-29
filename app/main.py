@@ -11,6 +11,7 @@ from sqlalchemy import Engine
 
 from app import __version__
 from app.api import config as config_api
+from app.api import conflicts as conflicts_api
 from app.api import health as health_api
 from app.api import imports as imports_api
 from app.api import registry as registry_api
@@ -55,6 +56,7 @@ def create_app(settings: Settings | None = None, engine: Engine | None = None) -
     app.include_router(imports_api.router)
     app.include_router(territories_api.router)
     app.include_router(registry_api.router)
+    app.include_router(conflicts_api.router)
 
     @app.exception_handler(RegistryError)
     async def registry_error(_request: Request, exc: RegistryError) -> JSONResponse:

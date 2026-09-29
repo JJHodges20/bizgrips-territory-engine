@@ -9,16 +9,44 @@
       "name": "small_with_disconnected_request",
       "starting_zip": "80123",
       "size_class": "SMALL",
-      "requested_zips": ["80124", "80130"],
+      "requested_zips": [
+        "80124",
+        "80130"
+      ],
       "client_name": "Wishful Baths",
       "expected": {
         "status": "PROPOSED",
-        "includes": ["80123", "80124"],
-        "excludes": ["80130"],
-        "excluded_reasons": {"80130": "NOT_CONTIGUOUS"},
-        "requested_reasons": {"80124": "REQUESTED"},
+        "includes": [
+          "80123",
+          "80124"
+        ],
+        "excludes": [
+          "80130"
+        ],
+        "excluded_reasons": {
+          "80130": "NOT_CONTIGUOUS"
+        },
+        "requested_reasons": {
+          "80124": "REQUESTED"
+        },
         "target_status": "WITHIN_TARGET",
-        "conflict_count": 0
+        "conflict_count": 0,
+        "conflict_check": {
+          "available": [
+            "80124",
+            "80130"
+          ],
+          "conflict_count": 0,
+          "contiguous": false,
+          "components": [
+            [
+              "80124"
+            ],
+            [
+              "80130"
+            ]
+          ]
+        }
       }
     }
   ],

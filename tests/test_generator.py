@@ -32,6 +32,7 @@ GENERATOR_SCENARIOS = [
     "state_border_kansas_city",
     "symmetric_multi_path",
     "missing_census_fields",
+    "reserved_expired",
 ]
 
 
@@ -103,12 +104,34 @@ def check(proposal: TerritoryProposal, expected: dict[str, Any], market: MarketG
         elif key == "serviceability_component":
             for zcta, score in value.items():
                 assert market.scores[zcta].components["serviceability"].score == score
+        elif key == "conflict_check":
+            check_conflict_result(proposal.conflicts, value)
+        elif key == "suggestions_adjacent_to_proposal":
+            assert proposal.conflicts.suggestions, "expected replacement suggestions"
+            members = set(codes)
+            for suggestion in proposal.conflicts.suggestions:
+                assert market.neighbours(suggestion.zcta) & members, suggestion
+                assert suggestion.zcta not in members
         elif key in ("deterministic", "deterministic_runs"):
             pass  # covered by test_determinism_across_runs_and_processes
         elif key in ("scoring", "failure_code", "blocking_territory_id", "blocking_status"):
             pass  # scoring: tests/test_scoring.py; failure keys: test_start_zip_unavailable
         else:
             raise AssertionError(f"unhandled expectation {key!r}")
+
+
+def check_conflict_result(result: Any, expected: dict[str, Any]) -> None:
+    for key, value in expected.items():
+        if key in ("reserved", "protected", "pending_release"):
+            assert [e.zcta for e in getattr(result, key)] == value, (key, value)
+        elif key == "reserving_client":
+            assert value in {e.client_business_name for e in result.reserved}
+        elif key in ("available", "own", "unknown", "components"):
+            assert getattr(result, key) == value, (key, getattr(result, key))
+        elif key in ("conflict_count", "contiguous", "flags"):
+            assert getattr(result, key) == value, (key, getattr(result, key))
+        else:
+            raise AssertionError(f"unhandled conflict expectation {key!r}")
 
 
 @pytest.mark.parametrize("scenario_id", GENERATOR_SCENARIOS)
@@ -152,8 +175,7 @@ def test_start_zip_unavailable_fails_with_suggestions(session: Session) -> None:
     assert len(suggested) <= RULES.generator.replacement_suggestions
     assert not {"80123", "80120", "80128"} & set(suggested)  # protected ZIPs never suggested
     conflicts = classify_zips(["80123"], market, registry, client_id="C-NEW")
-    assert [c.zcta for c in conflicts.protected] == expected["conflict_check"]["protected"]
-    assert conflicts.conflict_count == expected["conflict_check"]["conflict_count"]
+    check_conflict_result(conflicts, expected["conflict_check"])
     own = generate_territory(
         to_request(fixture_request).model_copy(update={"client_id": "C-ALPHA"}),
         market, registry, RULES, loaded.scenario.as_of,

@@ -7,7 +7,7 @@ import json
 from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.enums import AssignmentStatus, TerritorySizeClass
 
@@ -133,6 +133,29 @@ class ConflictResult(StrictSchema):
     components: list[list[str]] = Field(default_factory=list)
     flags: dict[str, str] = Field(default_factory=dict)  # zcta -> RESERVATION_EXPIRED
     suggestions: list[Suggestion] = Field(default_factory=list)
+
+
+class ConflictCheckRequest(StrictSchema):
+    zips: list[str] = Field(min_length=1, max_length=200)
+    client_id: str | None = Field(default=None, max_length=64)
+
+    @field_validator("zips")
+    @classmethod
+    def _five_digits(cls, zips: list[str]) -> list[str]:
+        bad = [z for z in zips if len(z) != 5 or not z.isdigit()]
+        if bad:
+            raise ValueError(f"not 5-digit ZCTA codes: {bad}")
+        return zips
+
+
+class ConflictCheckResponse(ConflictResult):
+    as_of: date
+    client_id: str | None = None
+    checked: list[str] = Field(default_factory=list)
+    disclaimer: str = (
+        "Availability reflects the registry at as_of; only a human-approved registry action "
+        "changes ZIP state."
+    )
 
 
 class TerritoryProposal(StrictSchema):

@@ -48,3 +48,43 @@ def load_market_graph(
         )
     ).all()
     return MarketGraph.build(records, [(a, b) for a, b in pairs], rules)
+
+
+def load_market_graph_for_zips(
+    session: Session, zips: list[str], radius_miles: float, rules: BusinessRules
+) -> MarketGraph:
+    """ZCTAs around every known ZIP in ``zips`` (bounding box of their centroids expanded by
+    the radius) with adjacency; an empty graph when none of the ZIPs has a record."""
+    codes = sorted({z for z in zips})
+    anchors = list(
+        session.scalars(
+            select(ZctaMarket).where(
+                ZctaMarket.zcta.in_(codes),
+                ZctaMarket.latitude.is_not(None),
+                ZctaMarket.longitude.is_not(None),
+            )
+        )
+    )
+    if not anchors:
+        known = session.scalars(select(ZctaMarket).where(ZctaMarket.zcta.in_(codes)))
+        return MarketGraph.build([ZctaRecord.from_row(r) for r in known], [], rules)
+    reach = radius_miles * 1.5 + 5.0
+    lats = [row.latitude for row in anchors]
+    lons = [row.longitude for row in anchors]
+    dlat = reach / MILES_PER_DEGREE_LAT
+    cos_lat = max(math.cos(math.radians(sum(lats) / len(lats))), 0.1)
+    dlon = reach / (MILES_PER_DEGREE_LAT * cos_lat)
+    rows = session.scalars(
+        select(ZctaMarket).where(
+            ZctaMarket.latitude.between(min(lats) - dlat, max(lats) + dlat),
+            ZctaMarket.longitude.between(min(lons) - dlon, max(lons) + dlon),
+        )
+    )
+    records = [ZctaRecord.from_row(row) for row in rows]
+    present = {r.zcta for r in records}
+    pairs = session.execute(
+        select(ZctaAdjacency.zcta_a, ZctaAdjacency.zcta_b).where(
+            ZctaAdjacency.zcta_a.in_(present), ZctaAdjacency.zcta_b.in_(present)
+        )
+    ).all()
+    return MarketGraph.build(records, [(a, b) for a, b in pairs], rules)

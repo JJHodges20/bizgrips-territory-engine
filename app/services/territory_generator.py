@@ -23,7 +23,8 @@ from app.schemas.territory import (
     TerritoryProposal,
     TerritoryRequest,
 )
-from app.services.conflicts import classify_zips, nearest_available
+from app.services.conflict_checker import check_conflicts
+from app.services.conflicts import nearest_available
 from app.services.market import MarketGraph
 from app.services.registry import availability_for
 from app.services.scoring import score_territory
@@ -294,8 +295,14 @@ def _evaluate(ctx: _Context) -> TerritoryProposal:
             minimum_viable=sizes.minimum_viable_units,
             status=status,  # type: ignore[arg-type]
         ),
-        conflicts=classify_zips(
-            ctx.request.requested_zips, ctx.market, ctx.registry, client_id=ctx.request.client_id
+        conflicts=check_conflicts(
+            ctx.request.requested_zips,
+            ctx.market,
+            ctx.registry,
+            ctx.rules,
+            client_id=ctx.request.client_id,
+            anchor=ctx.members,
+            exclude=ctx.members,
         ),
         flags=ctx.flags,
         explanation=ctx.explanation,

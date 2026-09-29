@@ -16,8 +16,8 @@ The engine recommends; a human approves.
 | 3 | Opportunity scoring + Opportunity Units | Done |
 | 4 | Territory registry | Done |
 | 5 | Territory generator | Done |
-| 6 | Conflict checker | Next |
-| 7 | Sales-call market checker | Planned |
+| 6 | Conflict checker | Done |
+| 7 | Sales-call market checker | Next |
 | 8+ | Map, onboarding/n8n, Meta, performance learning | Later |
 
 See `docs/IMPLEMENTATION_STATUS.md` for the live state and `docs/MILESTONES.md` for specs.
@@ -58,6 +58,7 @@ The API then answers at http://127.0.0.1:8000 (`/docs` for the interactive refer
 | `POST /territories`, `GET /territories`, `GET /territories/{id}` | create a PROPOSED territory from a ZIP list; list/inspect with expiry flags |
 | `POST /territories/{id}/reserve` · `/extend` · `/activate` · `/cancel` · `/pending-release` · `/release` · `/exceptions` | registry transitions (Standard sections 8-11); approver required for RESERVED and ACTIVE_PROTECTED |
 | `GET /zips/{zip}/availability?client_id=` | AVAILABLE or the blocking assignment, client and flags (RESERVATION_EXPIRED, RELEASE_DUE) |
+| `POST /conflicts/check` | a ZIP list sorted into available / reserved / protected / pending / own / unknown, contiguity, and nearest available replacements for each conflict |
 | `GET /registry/flags`, `POST /registry/sweep` | expired reservations and due releases; the sweep completes due releases only |
 
 Unknown ZCTAs answer 404 with `detail.code = NO_MARKET_DATA`.
