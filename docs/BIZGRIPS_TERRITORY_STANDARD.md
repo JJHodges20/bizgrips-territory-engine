@@ -183,3 +183,4 @@ exception for that; the protected client's contract must end or be amended first
 | Version | Date | Change |
 |---------|------|--------|
 | 1.0.0 | 2026-09-29 | Initial standard adopted with Milestone 0. All values are hypotheses pending calibration in Milestone 3 and operational validation. |
+| 1.0.0 (unchanged) | 2026-09-29 | Cross-checked against twelve client market-research briefs (`MARKET_RESEARCH_CROSSCHECK.md`): the 45+ homeowner age floor and all five signals confirmed; length of home ownership (ACS B25038) noted as a V2 candidate. No values changed. |

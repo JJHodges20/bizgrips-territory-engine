@@ -8,8 +8,8 @@ requires a named human to approve before a territory becomes protected.
 Master roadmap: `docs/ROADMAP_V1.1.md`.
 
 ## Current milestone
-Milestone 0 (repository + development environment + Phase 0 specifications) is complete.
-Next: Milestone 1 (public data ingestion). Always read `docs/IMPLEMENTATION_STATUS.md` first.
+Milestones 0 (repository + specifications) and 1 (public data ingestion) are complete.
+Next: Milestone 2 (ZIP/ZCTA data API). Always read `docs/IMPLEMENTATION_STATUS.md` first.
 
 ## Read these before changing territory logic
 1. `docs/BIZGRIPS_TERRITORY_STANDARD.md` — the business rules the software enforces
@@ -69,7 +69,7 @@ make format       # ruff format + fix
 make dev          # uvicorn app.main:app --reload
 make db-upgrade   # alembic upgrade head
 make seed-fixtures SCENARIO=denver_suburban_available   # load a fixture market into the dev DB
-make import-data  # Milestone 1 (not implemented yet)
+make import-data  # geography + ACS import into the dev DB (needs the geo extra; ~3 min, ~280 MB raw)
 ```
 Windows without GNU make: `.\dev.ps1 <target>` provides the same targets.
 Direct equivalents: `venv/Scripts/python.exe -m pytest -q`, `... -m ruff check .`.
@@ -82,6 +82,8 @@ Direct equivalents: `venv/Scripts/python.exe -m pytest -q`, `... -m ruff check .
   `as_of` in).
 - Missing data is explicit: `None` in, `missing_fields` / flags out. Never coerce to 0.
 - Every import records provenance (dataset, vintage, variables, import timestamp).
+- Ingestion logic lives in `app/ingest/` (pure functions + `store.py` upserts); `scripts/` only
+  wire arguments, downloads and sessions. Test it on `tests/fixtures/`, never on live data.
 - Tests use scenario fixtures from `data/fixtures/`. Add or extend a scenario before changing
   generator behaviour, and record expected behaviour in `docs/TEST_MARKETS.md`.
 - ruff, line length 100, type hints throughout `app/`.

@@ -11,8 +11,8 @@ The engine recommends; a human approves.
 | Milestone | Scope | State |
 |-----------|-------|-------|
 | 0 | Repository, dev environment, Phase 0 specifications, fixture markets | Done |
-| 1 | Public data ingestion (ACS 5-year + TIGER ZCTA boundaries) | Next |
-| 2 | ZIP/ZCTA data API | Planned |
+| 1 | Public data ingestion (ACS 5-year + CB ZCTA boundaries, adjacency, provenance) | Done |
+| 2 | ZIP/ZCTA data API | Next |
 | 3 | Opportunity scoring + Opportunity Units | Planned |
 | 4 | Territory registry | Planned |
 | 5 | Territory generator | Planned |
@@ -24,8 +24,8 @@ See `docs/IMPLEMENTATION_STATUS.md` for the live state and `docs/MILESTONES.md` 
 
 ## Quick start
 
-Requirements: Python 3.12+ (the local venv was created with 3.14), git. Docker only if you want
-PostgreSQL/PostGIS instead of SQLite.
+Requirements: Python 3.12+ (the local venv uses 3.14; geopandas/shapely wheels install fine),
+git. Docker only if you want PostgreSQL/PostGIS instead of SQLite.
 
 Windows (PowerShell):
 
@@ -33,7 +33,7 @@ Windows (PowerShell):
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,geo]"
 Copy-Item .env.example .env
 python -m pytest -q
 python -m uvicorn app.main:app --reload
@@ -44,6 +44,27 @@ Or use the task runner: `.\dev.ps1 setup`, `.\dev.ps1 test`, `.\dev.ps1 dev`.
 macOS / Linux / CI: `make setup && make test && make dev`.
 
 The API then answers at http://127.0.0.1:8000 (`/health`, `/config/business-rules`, `/docs`).
+
+## Importing the public data (Milestone 1)
+
+```powershell
+.\dev.ps1 import-data        # or: make import-data
+```
+
+This runs `scripts/import_geography.py` then `scripts/import_census.py`:
+
+- downloads the CB ZCTA5 2020 boundary shapefile (67 MB), the ZCTA-to-county relationship
+  file, GeoNames US postal codes and six ACS 2019-2023 summary-file tables (~215 MB) into
+  `data/raw/` with sha256 checksums (cached; `--refresh` re-downloads);
+- computes centroids, land/water area and rook adjacency with shared boundary lengths
+  (EPSG:5070) for ~33,800 ZCTAs, assigns the dominant state and primary city;
+- validates the ACS variable labels, converts sentinels to NULL, sums the age and year-built
+  buckets and upserts every ZCTA with provenance rows in `data_source_imports` and
+  `data_field_provenance`. Re-running updates rows in place and adds new import records.
+
+A free Census API key (`CENSUS_API_KEY` in `.env`) switches the census import to the Data API;
+without one it reads the same estimates from the summary files. The whole import takes a few
+minutes on a laptop. `--dry-run` prints the plan; `--with-geometry` also stores GeoJSON polygons.
 
 Optional PostgreSQL: `docker compose up -d db`, then set `DATABASE_URL` in `.env` to
 `postgresql+psycopg://bizgrips:bizgrips@localhost:5432/bizgrips_territory` and install the
@@ -68,17 +89,19 @@ app/
   repositories/               DB access (Milestone 2+)
   services/                   pure domain logic (Milestone 3+)
   api/                        FastAPI routers
+  ingest/                     public-data ingestion (downloads, geography, ACS, upserts)
   fixtures.py                 scenario fixture loader
   main.py                     FastAPI app factory
 data/fixtures/                deterministic synthetic markets used by tests
 scripts/                      import and seed CLIs
 migrations/                   Alembic migrations
-tests/                        pytest suite
+tests/                        pytest suite (tests/fixtures: synthetic ingestion inputs)
 ```
 
 ## Data sources (all free and public)
 
-- Census ACS 5-Year Estimates (tenure, householder age, year built, income, home value)
+- Census ACS 5-Year Estimates (tenure, householder age, year built, income, home value), via
+  the Data API (free key) or the ACS Summary File table-based downloads (no key)
 - Census cartographic boundary files for ZCTAs (geometry, land area, adjacency)
 - Census ZCTA-to-county relationship file (state assignment)
 - GeoNames US postal codes (primary city names and postal ZIP existence)

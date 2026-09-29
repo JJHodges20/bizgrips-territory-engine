@@ -80,6 +80,20 @@ def test_sentinels_and_geography_sources_present() -> None:
         assert source.url.startswith("https://")
     assert "B25007" in variables.tables
     assert len(variables.all_variables) == len(set(variables.all_variables))
+    assert variables.geography_sources["postal_places"].local_filename == "geonames_US.zip"
+    assert variables.geography_sources["zcta_boundaries"].vintage == "2020"
+
+
+def test_summary_file_and_label_checks() -> None:
+    variables = load_census_variables()
+    url = variables.summary_file.url(2023, "B25007")
+    assert url.endswith("/5YRData/acsdt5y2023-b25007.dat")
+    assert variables.summary_file.zcta_geo_id_prefix == "860Z200US"
+    assert variables.endpoint(2022) == "https://api.census.gov/data/2022/acs/acs5"
+    checks = variables.label_checks()
+    assert checks["B25007_006E"] == "45 to 54"
+    assert checks["B25034_005E"] == "1990 to 1999"
+    assert set(checks) <= set(variables.all_variables)
 
 
 def test_mismatched_table_is_rejected() -> None:

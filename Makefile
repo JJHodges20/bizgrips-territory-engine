@@ -16,7 +16,7 @@ SCENARIO ?= denver_suburban_available
 setup:
 	@test -d venv || $(VENV_CMD)
 	$(PY) -m pip install --upgrade pip
-	$(PY) -m pip install -e ".[dev]"
+	$(PY) -m pip install -e ".[dev,geo]"
 	@test -f .env || cp .env.example .env
 	@echo "Setup complete. Run 'make test' then 'make dev'."
 

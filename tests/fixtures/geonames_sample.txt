@@ -1,0 +1,5 @@
+US	11111	Littleton	Colorado	CO	Jefferson	059			39.625	-105.075	4
+US	11111	Ken Caryl	Colorado	CO	Jefferson	059			39.625	-105.075	4
+US	11112	Englewood	Colorado	CO	Arapahoe	005			39.625	-105.025	4
+US	11114	Tribune	Kansas	KS	Greeley	071			39.1	-104.5	4
+US	99998	Nowhere	Colorado	CO	Elbert	039			39.3	-104.2	4

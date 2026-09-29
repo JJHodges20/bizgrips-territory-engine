@@ -1,0 +1,58 @@
+"""Read access to zcta_markets and zcta_adjacency. Returns ZctaRecord (plain data), never ORM
+rows, so services stay free of sessions."""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+
+from sqlalchemy import func, or_, select
+from sqlalchemy.orm import Session
+
+from app.models import ZctaAdjacency, ZctaMarket
+from app.schemas.market import ZctaRecord
+
+
+def get_market(session: Session, zcta: str) -> ZctaRecord | None:
+    row = session.get(ZctaMarket, zcta)
+    return None if row is None else ZctaRecord.from_row(row)
+
+
+def get_markets(session: Session, zctas: Iterable[str]) -> dict[str, ZctaRecord]:
+    codes = sorted(set(zctas))
+    if not codes:
+        return {}
+    rows = session.scalars(select(ZctaMarket).where(ZctaMarket.zcta.in_(codes)))
+    return {row.zcta: ZctaRecord.from_row(row) for row in rows}
+
+
+def list_markets_by_state(session: Session, state: str) -> list[ZctaRecord]:
+    rows = session.scalars(
+        select(ZctaMarket).where(ZctaMarket.state == state.upper()).order_by(ZctaMarket.zcta)
+    )
+    return [ZctaRecord.from_row(row) for row in rows]
+
+
+def search_markets_by_city(
+    session: Session, query: str, *, state: str | None = None, limit: int = 50
+) -> list[ZctaRecord]:
+    """Case-insensitive prefix match on primary_city, optionally within one state."""
+    pattern = query.strip().lower() + "%"
+    stmt = select(ZctaMarket).where(func.lower(ZctaMarket.primary_city).like(pattern))
+    if state:
+        stmt = stmt.where(ZctaMarket.state == state.upper())
+    stmt = stmt.order_by(ZctaMarket.state, ZctaMarket.primary_city, ZctaMarket.zcta).limit(limit)
+    return [ZctaRecord.from_row(row) for row in session.scalars(stmt)]
+
+
+def neighbour_zctas(session: Session, zcta: str) -> list[str]:
+    """Rook-adjacent ZCTAs (both directions of the stored ordered pair), sorted."""
+    rows = session.execute(
+        select(ZctaAdjacency.zcta_a, ZctaAdjacency.zcta_b).where(
+            or_(ZctaAdjacency.zcta_a == zcta, ZctaAdjacency.zcta_b == zcta)
+        )
+    )
+    return sorted(b if a == zcta else a for a, b in rows)
+
+
+def count_markets(session: Session) -> int:
+    return int(session.scalar(select(func.count()).select_from(ZctaMarket)) or 0)

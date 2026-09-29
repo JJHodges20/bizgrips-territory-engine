@@ -20,7 +20,7 @@ a row to section 8 when refreshing.
 | primary_city | TEXT NULL | GeoNames place name | First place listed for the ZIP |
 | state | CHAR(2) NULL | ZCTA→county relationship file | State of the county with the largest land overlap |
 | state_fips | CHAR(2) NULL | same | |
-| latitude, longitude | FLOAT NULL | Centroid of boundary geometry (representative point) | WGS84 |
+| latitude, longitude | FLOAT NULL | Centroid of the boundary geometry (EPSG:5070); the representative point when the centroid falls outside the polygon | WGS84; always inside the ZCTA |
 | land_area_sq_miles | FLOAT NULL | `ALAND20` / 2,589,988.11 | |
 | water_area_sq_miles | FLOAT NULL | `AWATER20` / 2,589,988.11 | |
 | geometry_geojson | TEXT NULL | CB boundary polygon | Optional; loaded with `--with-geometry`. PostGIS column can be added later. |
@@ -164,13 +164,13 @@ scores can be reproduced.
 | Column | Type | Notes |
 |--------|------|-------|
 | id | INT PK | |
-| dataset | TEXT | e.g. `acs/acs5`, `cb_zcta520_500k`, `geonames_us_postal` |
+| dataset | TEXT | `acs/acs5`, `cb_zcta520_500k`, `zcta520_county20_rel`, `geonames_us_postal` (ids from `census_variables.yaml`) |
 | vintage | TEXT | e.g. `2023`, `2020` |
 | release_label | TEXT | human label |
 | source_url | TEXT | |
 | variables_json | JSON | field → variables mapping used |
 | record_count | INT | |
-| checksum | TEXT NULL | sha256 of the downloaded file(s) |
+| checksum | TEXT NULL | sha256 of the downloaded file; for multi-file sources a sha256 over the sorted per-file digests |
 | imported_at | DATETIME | |
 | notes | TEXT NULL | |
 
@@ -193,13 +193,27 @@ field one can identify the dataset, release, variables and import timestamp.
 
 | Date | Dataset | Vintage | Note |
 |------|---------|---------|------|
-| 2026-09-29 | ACS 5-Year | 2023 | Variable map recorded in `census_variables.yaml`; not yet imported. |
+| 2026-09-29 | ACS 5-Year | 2023 | Variable map recorded in `census_variables.yaml`. |
 | 2026-09-29 | CB ZCTA5 | 2020 | 1:500k generalised boundaries selected for adjacency and centroids. |
+| 2026-09-29 | ACS 5-Year | 2023 | First national import (Milestone 1) from the ACS Summary File table-based files (`acsdt5y2023-<table>.dat`), the same 2019-2023 estimates the Data API serves. |
+| 2026-09-29 | CB ZCTA5 + relationship file + GeoNames | 2020 / 2020 / download date | First national geography import (Milestone 1). |
 
 ## 9. Sentinels and edge cases
 
 - ACS returns negative sentinel values (e.g. `-666666666`) where an estimate is unavailable.
-  These are converted to NULL, never stored as numbers.
+  These are converted to NULL, never stored as numbers. Any other negative value is also
+  treated as unavailable (counts and dollar medians cannot be negative) and counted separately
+  in the import summary so a new jam value is noticed.
+- A bucket sum (e.g. owner 45+) is NULL when any of its component variables is unavailable;
+  it is never a partial sum.
+- The Census Data API requires a free key for data queries (since 2026); variable metadata is
+  served without one. `scripts/import_census.py` uses the API when `CENSUS_API_KEY` is set and
+  otherwise reads the ACS Summary File table-based files (`summary_file` in
+  `census_variables.yaml`), which carry the same estimates for every summary level; only the
+  ZCTA rows (GEO_ID prefix `860Z200US`) are read.
+- Rows whose values are mutually inconsistent across tables (rare, e.g. occupied units above
+  total units after rounding) are stored as published and counted in the import notes;
+  `ZctaRecord.from_row` returns them unvalidated so reads never fail.
 - ZCTAs with zero households (industrial, parks, PO-box-like areas) are stored and marked
   unscored (tier U).
 - ZCTAs can cross state lines; `state` is the dominant state and `crosses_state_line` is

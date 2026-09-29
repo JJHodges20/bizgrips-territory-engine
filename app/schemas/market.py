@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 
 class ZctaRecord(BaseModel):
@@ -54,6 +54,19 @@ class ZctaRecord(BaseModel):
             if a is not None and b is not None and a > b:
                 raise ValueError(f"{self.zcta}: {smaller} ({a}) exceeds {larger} ({b})")
         return self
+
+    @classmethod
+    def from_row(cls, row: Any) -> ZctaRecord:
+        """Build from an ORM row (anything with matching attributes).
+
+        Source data can be mutually inconsistent across ACS tables in rare cases; such rows are
+        returned unvalidated rather than making reads fail. Importers count and report them.
+        """
+        data = {name: getattr(row, name, None) for name in cls.model_fields}
+        try:
+            return cls.model_validate(data)
+        except ValidationError:
+            return cls.model_construct(**data)
 
     # ---- derived metrics (SCORING_SPEC.md section 2) ---------------------------------
 

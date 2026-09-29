@@ -19,7 +19,7 @@ switch ($Target) {
     "setup" {
         if (-not (Test-Path $Py)) { python -m venv venv }
         Invoke-Py -m pip install --upgrade pip
-        Invoke-Py -m pip install -e ".[dev]"
+        Invoke-Py -m pip install -e ".[dev,geo]"
         if (-not (Test-Path ".env")) { Copy-Item ".env.example" ".env" }
         Write-Host "Setup complete. Run '.\dev.ps1 test' then '.\dev.ps1 dev'."
     }

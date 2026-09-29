@@ -38,9 +38,27 @@ class CensusField(StrictModel):
 
 class GeographySource(StrictModel):
     name: str
+    dataset: str = Field(pattern=r"^[a-z0-9_]+$")
     url: str = Field(pattern=r"^https://")
+    vintage: str | None = None  # None: a rolling export; the import records the download date
+    filename: str | None = None  # local name under data/raw; defaults to the URL basename
     fields: dict[str, str] | None = None
     notes: str | None = None
+
+    @property
+    def local_filename(self) -> str:
+        return self.filename or self.url.rsplit("/", 1)[-1]
+
+
+class SummaryFileSource(StrictModel):
+    """ACS Summary File table-based files: the key-less alternative to the Data API."""
+
+    url_template: str = Field(pattern=r"^https://.*\{vintage\}.*\{table_lower\}")
+    zcta_geo_id_prefix: str = Field(min_length=1)
+    min_vintage: int = Field(ge=2009)
+
+    def url(self, vintage: int, table: str) -> str:
+        return self.url_template.format(vintage=vintage, table_lower=table.lower())
 
 
 class CensusVariables(StrictModel):
@@ -49,6 +67,7 @@ class CensusVariables(StrictModel):
     release_label: str
     api_base: str = Field(pattern=r"^https://")
     geography: str
+    summary_file: SummaryFileSource
     sentinels: tuple[int, ...] = Field(min_length=1)
     fields: dict[str, CensusField]
     geography_sources: dict[str, GeographySource]
@@ -64,8 +83,16 @@ class CensusVariables(StrictModel):
     def tables(self) -> tuple[str, ...]:
         return tuple(sorted({field.table for field in self.fields.values()}))
 
-    def endpoint(self) -> str:
-        return f"{self.api_base}/{self.vintage}/{self.dataset}"
+    def endpoint(self, vintage: int | None = None) -> str:
+        return f"{self.api_base}/{vintage or self.vintage}/{self.dataset}"
+
+    def label_checks(self) -> dict[str, str]:
+        """Variable id -> required label fragment (checked on the first variable of each field)."""
+        return {
+            field.variables[0]: field.label_contains
+            for field in self.fields.values()
+            if field.label_contains
+        }
 
 
 def load_census_variables(path: Path | str | None = None) -> CensusVariables:

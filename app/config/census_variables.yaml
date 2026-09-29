@@ -11,6 +11,15 @@ release_label: "ACS 2019-2023 5-Year Estimates"
 api_base: "https://api.census.gov/data"
 geography: "zip code tabulation area"
 
+# The Data API requires a free key (https://api.census.gov/data/key_signup.html) for data
+# queries; variable metadata (label checks) is served without one. When no CENSUS_API_KEY is
+# configured, scripts/import_census.py reads the same estimates from the ACS Summary File
+# table-based files (no key, one ~20-80 MB pipe-delimited file per table, all summary levels).
+summary_file:
+  url_template: "https://www2.census.gov/programs-surveys/acs/summary_file/{vintage}/table-based-SF/data/5YRData/acsdt5y{vintage}-{table_lower}.dat"
+  zcta_geo_id_prefix: "860Z200US"   # summary level 860 = ZCTA; the 5-digit code follows
+  min_vintage: 2020                 # table-based layout; earlier vintages use sequence files
+
 # Values the API returns for unavailable estimates. Treated as missing (NULL), never as numbers.
 sentinels: [-666666666, -999999999, -888888888, -222222222, -333333333, -555555555]
 
@@ -71,14 +80,20 @@ fields:
 geography_sources:
   zcta_boundaries:
     name: "Census Cartographic Boundary File, ZCTA5 2020, 1:500,000"
+    dataset: cb_zcta520_500k
+    vintage: "2020"
     url: "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip"
     fields: { zcta: ZCTA5CE20, land_area_m2: ALAND20, water_area_m2: AWATER20 }
     notes: "Generalised boundaries; adequate for centroids, land area and adjacency."
   zcta_to_county:
     name: "2020 ZCTA to County Relationship File"
+    dataset: zcta520_county20_rel
+    vintage: "2020"
     url: "https://www2.census.gov/geo/docs/maps-data/data/rel2020/zcta520/tab20_zcta520_county20_natl.txt"
     notes: "State assigned from the county with the largest land-area overlap."
   postal_places:
     name: "GeoNames US postal codes (CC BY 4.0)"
+    dataset: geonames_us_postal
+    filename: geonames_US.zip          # rolling export; the vintage recorded is the download date
     url: "https://download.geonames.org/export/zip/US.zip"
     notes: "Primary city names and the set of postal ZIPs used for postal_zip validation."
