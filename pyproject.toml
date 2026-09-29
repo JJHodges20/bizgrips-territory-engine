@@ -38,6 +38,9 @@ geo = [
 postgres = [
     "psycopg[binary]>=3.2",
 ]
+ui-test = [
+    "playwright>=1.45",  # then: python -m playwright install chromium (browser smoke test)
+]
 
 [tool.setuptools.packages.find]
 include = ["app*"]

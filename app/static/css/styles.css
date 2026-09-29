@@ -130,7 +130,7 @@ ul.points { margin: 0; padding-left: 18px; } ul.points li { margin: 5px 0; }
 .map-layout { display: grid; grid-template-columns: 1fr 380px; height: calc(100vh - var(--topbar-h)); }
 .map { position: relative; height: 100%; background: #e9eef3; }
 .leaflet-container { font-family: var(--font); font-size: 13px; }
-.map-toolbar { position: absolute; top: 12px; left: 12px; z-index: 500; display: flex; gap: 8px; align-items: center; background: var(--surface); padding: 8px; border-radius: 10px; box-shadow: var(--shadow); }
+.map-toolbar { position: absolute; top: 12px; left: 58px; z-index: 500; display: flex; gap: 8px; align-items: center; background: var(--surface); padding: 8px; border-radius: 10px; box-shadow: var(--shadow); }
 .map-toolbar .input { width: 240px; }
 .map-hint { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 500; background: #1b2734; color: #fff; padding: 8px 14px; border-radius: 999px; font-size: 13px; box-shadow: var(--shadow); }
 .map-hint[hidden] { display: none; }

@@ -181,8 +181,13 @@ B25038) recorded as a V2 candidate.
 - Tests: viewport features and guards, territory shape and locate, evaluation, static serving,
   esprima parse of every module (added to the dev extras); 142 tests pass. Real data: the Denver
   viewport (93 ZCTAs, 0.19 MB) answers in 0.13 s.
-- Not automated: no browser-based UI test (no Node or browser on this machine); module imports
-  are cross-checked statically and every module parses.
+- Browser verification: Playwright + headless Chromium (optional `ui-test` extra) drives the
+  three views in `tests/test_ui_browser.py` (registry drawer, sales check, map selection with
+  live evaluation, polygon click) and fails on any console or page error; every view was also
+  screenshotted against the real database (`docs/screenshots/`) and the one layout defect
+  found (map toolbar under the zoom control) was fixed.
+- Dev database: the Milestone 0 fixture reservation T-000002 was cancelled through the API
+  (audit line by `dev-cleanup`), so Littleton proposals no longer exclude 80127/80129.
 
 ## Known issues / open questions
 
@@ -194,9 +199,6 @@ B25038) recorded as a V2 candidate.
 - The `/sales` page has no authentication and shows client names on conflicts; it is for the
   internal network only until access control is added (see the registry note below).
 
-- The dev database still contains the fixture territories seeded in Milestone 0 (for example
-  a RESERVED T-000002 on 80127/80129), so real proposals around Littleton exclude 80127 as
-  BLOCKED_RESERVED. Cancel them through the API or reseed with `--replace` before demos.
 
 - The registry has no authentication yet; `approved_by` is a trusted string. Access control
   is a deployment concern to settle before sales staff use the write endpoints (Milestone 8+).
@@ -236,9 +238,10 @@ B25038) recorded as a V2 candidate.
 
 ## Next task
 
-Field use: open `/app`, cancel the Milestone 0 fixture territories in the dev database, walk a
-real market through sales check -> map selection -> save as proposal -> reserve -> activate,
-and record feedback in this file before scheduling further UI work.
+Field use: open `/app`, walk a real market through sales check -> map selection -> save as
+proposal -> reserve -> activate, and record feedback in this file before scheduling further
+UI work. Cancelled territories (such as T-000002) stay on the board for audit; filter by status
+to hide them.
 
 ## Decisions log
 

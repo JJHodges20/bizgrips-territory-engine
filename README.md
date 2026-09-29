@@ -63,10 +63,19 @@ build step. Three views share one design system:
 - **Sales check** — the market checker with talking points, statistics and the suggested
   territory, plus "Show on map" and "Save as proposal".
 
+![Registry board](docs/screenshots/registry.png)
+![Map with a custom grouping](docs/screenshots/map-grouping.png)
+![Sales check](docs/screenshots/sales-check.png)
+
 The header's *as of* date and *client id* apply to every view. Map polygons need
 `scripts/import_geography.py --with-geometry` (already part of `make import-data` from this
 milestone on). Tiles come from OpenStreetMap by default; change `tileUrl` in
 `app/static/config.js` for heavier use. There is no login yet: keep it on the internal network.
+
+Browser smoke test (optional): `pip install -e ".[ui-test]"` then `python -m playwright install
+chromium`; `tests/test_ui_browser.py` drives the three views in headless Chromium and fails on
+any console or page error. It is skipped automatically when Playwright or the browser is
+missing.
 
 | Endpoint | Returns |
 |----------|---------|

@@ -4,6 +4,12 @@ import { api } from "./api.js";
 import { badge, clear, context, el, emptyState, errorMessage, flagEl, fmt, formModal, loading, statusBadge, tierBadge, toast } from "./ui.js";
 
 let results = null;
+let prospectNode = null;
+
+function prospectLabel() {
+  const id = context().client_id;
+  return id ? `${id} (from the header)` : "none set (add a client id in the header to treat its own ZIPs as available)";
+}
 
 export function parseInput(text) {
   const trimmed = (text || "").trim();
@@ -109,12 +115,13 @@ async function run(q, sizeClass) {
 }
 
 export async function mount(container, params) {
+  prospectNode = el("div", { class: "muted", style: "padding:9px 0" }, prospectLabel());
   const input = el("input", { class: "input", type: "text", placeholder: "80123   ·   80123, 80127, 80128   ·   Littleton, CO", value: params.q || "" });
   const size = el("select", { class: "select" }, [["", "Standard (default)"], ["SMALL", "Small"], ["STANDARD", "Standard"], ["LARGE", "Large"]].map(([v, l]) => el("option", { value: v }, l)));
   const form = el("form", { class: "sales-form", onSubmit: (e) => { e.preventDefault(); run(input.value, size.value); } },
     el("div", { class: "field" }, el("label", {}, "Starting ZIP, pasted ZIPs, or City, ST"), input),
     el("div", { class: "field" }, el("label", {}, "Size class"), size),
-    el("div", { class: "field" }, el("label", {}, "Prospect"), el("div", { class: "muted", style: "padding:9px 0" }, "uses the client id in the header, if any")),
+    el("div", { class: "field" }, el("label", {}, "Prospect"), prospectNode),
     el("button", { class: "btn btn-primary", type: "submit" }, "Check market"));
   results = el("div", { class: "stack" }, emptyState("Ready", "One input gives availability, the suggested territory, statistics and talking points."));
   container.appendChild(el("div", { class: "card" }, el("div", { class: "card-body sales-hero" }, form)));
@@ -122,4 +129,6 @@ export async function mount(container, params) {
   if (params.q) run(params.q, "");
 }
 
-export function unmount() { results = null; }
+export function refresh() { if (prospectNode) prospectNode.textContent = prospectLabel(); }
+
+export function unmount() { results = null; prospectNode = null; }
