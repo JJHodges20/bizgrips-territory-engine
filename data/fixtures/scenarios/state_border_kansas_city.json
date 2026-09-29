@@ -1,0 +1,40 @@
+{
+  "scenario_id": "state_border_kansas_city",
+  "description": "Starting ZIP on the Kansas/Missouri line; cross-state expansion is allowed by default and can be disabled per request.",
+  "grid": "kansas_city_border",
+  "as_of": "2026-09-29",
+  "territories": [],
+  "requests": [
+    {
+      "name": "small_cross_state_allowed",
+      "starting_zip": "66208",
+      "size_class": "SMALL",
+      "allow_cross_state": true,
+      "client_name": "State Line Showers",
+      "expected": {
+        "status": "PROPOSED",
+        "includes_any": ["64112", "64113", "64114"],
+        "flags_include": ["CROSSES_STATE_LINE", "WITHIN_TARGET"],
+        "states": ["KS", "MO"]
+      }
+    },
+    {
+      "name": "small_cross_state_disallowed",
+      "starting_zip": "66208",
+      "size_class": "SMALL",
+      "allow_cross_state": false,
+      "client_name": "Kansas Only Baths",
+      "expected": {
+        "status": "PROPOSED",
+        "states": ["KS"],
+        "excluded_reasons": {"64112": "CROSS_STATE_DISALLOWED", "64113": "CROSS_STATE_DISALLOWED"},
+        "flags_include": ["FRONTIER_EXHAUSTED"],
+        "target_status": "BELOW_MINIMUM_VIABLE"
+      }
+    }
+  ],
+  "expected_behavior": [
+    "With cross-state allowed, Missouri ZCTAs join the territory and CROSSES_STATE_LINE is flagged for contract review.",
+    "With cross-state disallowed, only Kansas ZCTAs are used; Missouri neighbours are excluded CROSS_STATE_DISALLOWED and the Kansas-only frontier is too small to reach the band."
+  ]
+}

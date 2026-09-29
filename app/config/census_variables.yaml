@@ -1,0 +1,84 @@
+# Census ACS 5-Year variable map used by scripts/import_census.py (Milestone 1).
+#
+# Recorded against the ACS 2019-2023 5-Year Estimates (vintage 2023). When moving to a newer
+# vintage: confirm the B25034 year-built buckets and B25007 age buckets still line up (the API's
+# variables.json labels are checked against `label_contains` before any data is written), bump
+# `vintage`, and log the change in docs/DATA_DICTIONARY.md. Never mix vintages in one import.
+
+dataset: acs/acs5
+vintage: 2023
+release_label: "ACS 2019-2023 5-Year Estimates"
+api_base: "https://api.census.gov/data"
+geography: "zip code tabulation area"
+
+# Values the API returns for unavailable estimates. Treated as missing (NULL), never as numbers.
+sentinels: [-666666666, -999999999, -888888888, -222222222, -333333333, -555555555]
+
+fields:
+  total_population:
+    table: B01003
+    variables: [B01003_001E]
+    label_contains: "Total"
+  total_households:                      # occupied housing units
+    table: B25003
+    variables: [B25003_001E]
+    label_contains: "Total"
+  owner_occupied_households:
+    table: B25003
+    variables: [B25003_002E]
+    label_contains: "Owner occupied"
+  renter_occupied_households:
+    table: B25003
+    variables: [B25003_003E]
+    label_contains: "Renter occupied"
+  owner_households_age_45_plus:          # sum of owner-occupied householder age buckets 45+
+    table: B25007
+    variables: [B25007_006E, B25007_007E, B25007_008E, B25007_009E, B25007_010E, B25007_011E]
+    label_contains: "45 to 54"
+  owner_households_age_55_plus:
+    table: B25007
+    variables: [B25007_007E, B25007_008E, B25007_009E, B25007_010E, B25007_011E]
+    label_contains: "55 to 59"
+  owner_households_age_65_plus:
+    table: B25007
+    variables: [B25007_009E, B25007_010E, B25007_011E]
+    label_contains: "65 to 74"
+  total_housing_units:
+    table: B25034
+    variables: [B25034_001E]
+    label_contains: "Total"
+  homes_built_before_2000:               # sum of year-built buckets 1999 and earlier
+    table: B25034
+    variables: [B25034_005E, B25034_006E, B25034_007E, B25034_008E, B25034_009E, B25034_010E, B25034_011E]
+    label_contains: "1990 to 1999"
+  homes_built_before_1990:
+    table: B25034
+    variables: [B25034_006E, B25034_007E, B25034_008E, B25034_009E, B25034_010E, B25034_011E]
+    label_contains: "1980 to 1989"
+  homes_built_before_1980:
+    table: B25034
+    variables: [B25034_007E, B25034_008E, B25034_009E, B25034_010E, B25034_011E]
+    label_contains: "1970 to 1979"
+  median_household_income:
+    table: B19013
+    variables: [B19013_001E]
+    label_contains: "Median household income"
+  median_home_value:
+    table: B25077
+    variables: [B25077_001E]
+    label_contains: "Median value"
+
+geography_sources:
+  zcta_boundaries:
+    name: "Census Cartographic Boundary File, ZCTA5 2020, 1:500,000"
+    url: "https://www2.census.gov/geo/tiger/GENZ2020/shp/cb_2020_us_zcta520_500k.zip"
+    fields: { zcta: ZCTA5CE20, land_area_m2: ALAND20, water_area_m2: AWATER20 }
+    notes: "Generalised boundaries; adequate for centroids, land area and adjacency."
+  zcta_to_county:
+    name: "2020 ZCTA to County Relationship File"
+    url: "https://www2.census.gov/geo/docs/maps-data/data/rel2020/zcta520/tab20_zcta520_county20_natl.txt"
+    notes: "State assigned from the county with the largest land-area overlap."
+  postal_places:
+    name: "GeoNames US postal codes (CC BY 4.0)"
+    url: "https://download.geonames.org/export/zip/US.zip"
+    notes: "Primary city names and the set of postal ZIPs used for postal_zip validation."

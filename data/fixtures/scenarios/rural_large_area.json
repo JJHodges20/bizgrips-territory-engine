@@ -1,0 +1,39 @@
+{
+  "scenario_id": "rural_large_area",
+  "description": "Rural ZCTAs with very large land areas exceed the serviceability cap and cannot be auto-selected.",
+  "grid": "wyoming_rural",
+  "as_of": "2026-09-29",
+  "territories": [],
+  "requests": [
+    {
+      "name": "small_from_douglas",
+      "starting_zip": "82633",
+      "size_class": "SMALL",
+      "client_name": "High Plains Bath",
+      "expected": {
+        "status": "PROPOSED",
+        "zips": ["82633"],
+        "flags_include": ["UNSERVICEABLE_LAND_AREA", "FRONTIER_EXHAUSTED", "BELOW_MINIMUM_VIABLE"],
+        "excluded_reasons": {"82637": "UNSERVICEABLE_LAND_AREA"},
+        "serviceability_component": {"82633": 0}
+      }
+    },
+    {
+      "name": "small_from_casper_east",
+      "starting_zip": "82609",
+      "size_class": "SMALL",
+      "client_name": "Casper Tub Pros",
+      "expected": {
+        "status": "PROPOSED",
+        "zips": ["82609", "82636"],
+        "excluded_reasons": {"82604": "UNSERVICEABLE_LAND_AREA"},
+        "flags_include": ["FRONTIER_EXHAUSTED", "BELOW_MINIMUM_VIABLE"]
+      }
+    }
+  ],
+  "expected_behavior": [
+    "A starting ZIP over 400 sq mi is included but flagged UNSERVICEABLE_LAND_AREA.",
+    "Oversized neighbours are never auto-selected, so rural proposals stall below minimum viable size.",
+    "From compact 82609 the generator adds 82636 but not oversized 82604, and still ends below minimum viable; a human exception is required for rural markets."
+  ]
+}

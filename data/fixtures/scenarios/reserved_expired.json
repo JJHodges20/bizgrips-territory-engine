@@ -1,0 +1,48 @@
+{
+  "scenario_id": "reserved_expired",
+  "description": "Another prospect's reservation has expired but has not been released; the ZIPs stay blocked and are flagged.",
+  "grid": "denver_suburban",
+  "as_of": "2026-09-29",
+  "territories": [
+    {
+      "territory_id": "T-000002",
+      "client_id": "C-BRAVO",
+      "client_business_name": "Front Range Showers",
+      "starting_zip": "80127",
+      "territory_size_class": "SMALL",
+      "status": "RESERVED",
+      "approved_by": "Sales Manager",
+      "reservation_date": "2026-07-15",
+      "reservation_expires_at": "2026-08-14",
+      "zips": ["80127", "80129"],
+      "notes": "Fixture: reservation expired 2026-08-14, never released."
+    }
+  ],
+  "requests": [
+    {
+      "name": "standard_requesting_reserved_zip",
+      "starting_zip": "80123",
+      "size_class": "STANDARD",
+      "requested_zips": ["80127"],
+      "client_name": "Late Arrival Baths",
+      "expected": {
+        "status": "PROPOSED",
+        "excludes": ["80127", "80129"],
+        "excluded_reasons": {"80127": "BLOCKED_RESERVED"},
+        "conflict_check": {
+          "reserved": ["80127"],
+          "conflict_count": 1,
+          "flags": {"80127": "RESERVATION_EXPIRED"},
+          "reserving_client": "Front Range Showers"
+        },
+        "target_status": "WITHIN_TARGET",
+        "suggestions_adjacent_to_proposal": true
+      }
+    }
+  ],
+  "expected_behavior": [
+    "Expired reservations remain conflicts until a human releases them; the engine flags RESERVATION_EXPIRED.",
+    "The proposal excludes the reserved ZIPs and still reaches the Standard band through other neighbours.",
+    "After a human releases T-000002, both ZIPs are available on the next run."
+  ]
+}

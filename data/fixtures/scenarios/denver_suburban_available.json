@@ -1,0 +1,33 @@
+{
+  "scenario_id": "denver_suburban_available",
+  "description": "Available suburban market: nothing reserved or protected; a Standard territory should be built from 80123.",
+  "grid": "denver_suburban",
+  "as_of": "2026-09-29",
+  "territories": [],
+  "requests": [
+    {
+      "name": "standard_from_80123",
+      "starting_zip": "80123",
+      "size_class": "STANDARD",
+      "client_name": "Prospect Bath Co",
+      "expected": {
+        "status": "PROPOSED",
+        "includes": ["80123"],
+        "first_zip": "80123",
+        "contiguous": true,
+        "target_status": "WITHIN_TARGET",
+        "flags_include": ["WITHIN_TARGET"],
+        "conflict_count": 0,
+        "max_miles_from_start": 30,
+        "approval_required": true,
+        "deterministic": true
+      }
+    }
+  ],
+  "expected_behavior": [
+    "Proposal includes the starting ZIP first and every later ZIP is adjacent to an earlier one.",
+    "Aggregate Opportunity Units land inside the Standard band (20,000-32,000, 10% tolerance).",
+    "No conflicts; explanation has one line per ZIP; approval is required.",
+    "Running the generator twice yields the identical ordered ZIP list."
+  ]
+}

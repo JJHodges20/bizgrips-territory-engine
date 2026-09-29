@@ -1,0 +1,41 @@
+{
+  "grid_id": "kansas_city_border",
+  "description": "SYNTHETIC Kansas City metro along the KS/MO state line: three Kansas ZCTAs and three Missouri ZCTAs with cross-state edges. Values are plausible but not real Census data.",
+  "zctas": [
+    {"zcta": "66205", "postal_zip": "66205", "primary_city": "Mission", "state": "KS", "latitude": 39.028, "longitude": -94.633, "land_area_sq_miles": 2.4,
+     "total_population": 9500, "total_households": 4600, "owner_occupied_households": 2400, "renter_occupied_households": 2200,
+     "owner_households_age_45_plus": 1600, "owner_households_age_55_plus": 1200, "owner_households_age_65_plus": 700,
+     "total_housing_units": 4900, "homes_built_before_2000": 4400, "homes_built_before_1990": 4200, "homes_built_before_1980": 3900,
+     "median_household_income": 78000, "median_home_value": 290000},
+    {"zcta": "66208", "postal_zip": "66208", "primary_city": "Prairie Village", "state": "KS", "latitude": 38.998, "longitude": -94.628, "land_area_sq_miles": 3.9,
+     "total_population": 19200, "total_households": 8600, "owner_occupied_households": 6300, "renter_occupied_households": 2300,
+     "owner_households_age_45_plus": 4500, "owner_households_age_55_plus": 3400, "owner_households_age_65_plus": 2000,
+     "total_housing_units": 9100, "homes_built_before_2000": 8600, "homes_built_before_1990": 8300, "homes_built_before_1980": 7900,
+     "median_household_income": 117000, "median_home_value": 460000},
+    {"zcta": "66206", "postal_zip": "66206", "primary_city": "Prairie Village", "state": "KS", "latitude": 38.958, "longitude": -94.620, "land_area_sq_miles": 4.1,
+     "total_population": 14800, "total_households": 6300, "owner_occupied_households": 5100, "renter_occupied_households": 1200,
+     "owner_households_age_45_plus": 3600, "owner_households_age_55_plus": 2700, "owner_households_age_65_plus": 1600,
+     "total_housing_units": 6600, "homes_built_before_2000": 6200, "homes_built_before_1990": 6000, "homes_built_before_1980": 5700,
+     "median_household_income": 122000, "median_home_value": 420000},
+    {"zcta": "64112", "postal_zip": "64112", "primary_city": "Kansas City", "state": "MO", "latitude": 39.035, "longitude": -94.594, "land_area_sq_miles": 1.8,
+     "total_population": 10200, "total_households": 6100, "owner_occupied_households": 2000, "renter_occupied_households": 4100,
+     "owner_households_age_45_plus": 1400, "owner_households_age_55_plus": 1100, "owner_households_age_65_plus": 700,
+     "total_housing_units": 7000, "homes_built_before_2000": 6300, "homes_built_before_1990": 6000, "homes_built_before_1980": 5500,
+     "median_household_income": 74000, "median_home_value": 380000},
+    {"zcta": "64113", "postal_zip": "64113", "primary_city": "Kansas City", "state": "MO", "latitude": 39.013, "longitude": -94.596, "land_area_sq_miles": 3.2,
+     "total_population": 11800, "total_households": 5000, "owner_occupied_households": 3700, "renter_occupied_households": 1300,
+     "owner_households_age_45_plus": 2600, "owner_households_age_55_plus": 1900, "owner_households_age_65_plus": 1100,
+     "total_housing_units": 5300, "homes_built_before_2000": 5100, "homes_built_before_1990": 5000, "homes_built_before_1980": 4800,
+     "median_household_income": 129000, "median_home_value": 520000},
+    {"zcta": "64114", "postal_zip": "64114", "primary_city": "Kansas City", "state": "MO", "latitude": 38.958, "longitude": -94.598, "land_area_sq_miles": 5.6,
+     "total_population": 24000, "total_households": 11300, "owner_occupied_households": 7100, "renter_occupied_households": 4200,
+     "owner_households_age_45_plus": 4800, "owner_households_age_55_plus": 3600, "owner_households_age_65_plus": 2000,
+     "total_housing_units": 12300, "homes_built_before_2000": 11500, "homes_built_before_1990": 11000, "homes_built_before_1980": 10200,
+     "median_household_income": 82000, "median_home_value": 260000}
+  ],
+  "adjacency": [
+    ["66205", "66208"], ["66206", "66208"],
+    ["64112", "64113"], ["64113", "64114"],
+    ["64112", "66205"], ["64112", "66208"], ["64113", "66208"], ["64113", "66206"], ["64114", "66206"]
+  ]
+}

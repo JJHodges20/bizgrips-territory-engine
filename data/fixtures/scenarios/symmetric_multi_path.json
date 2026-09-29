@@ -1,0 +1,25 @@
+{
+  "scenario_id": "symmetric_multi_path",
+  "description": "Two identical candidates at equal distance: the tie-breaker order (distance, OU, ZCTA code) must produce the same territory every run.",
+  "grid": "symmetric_chain",
+  "as_of": "2026-09-29",
+  "territories": [],
+  "requests": [
+    {
+      "name": "small_from_centre",
+      "starting_zip": "40012",
+      "size_class": "SMALL",
+      "client_name": "Mirror Baths",
+      "expected": {
+        "status": "PROPOSED",
+        "zips_ordered": ["40012", "40011", "40013"],
+        "target_status": "WITHIN_TARGET",
+        "deterministic_runs": 100
+      }
+    }
+  ],
+  "expected_behavior": [
+    "40011 and 40013 tie on score, distance and OU; 40011 wins by ZCTA code ascending.",
+    "The serialised proposal hashes identically across 100 runs and across process restarts."
+  ]
+}

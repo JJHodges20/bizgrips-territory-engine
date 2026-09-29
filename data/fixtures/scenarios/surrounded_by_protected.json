@@ -1,0 +1,62 @@
+{
+  "scenario_id": "surrounded_by_protected",
+  "description": "The starting ZIP is available but every rook neighbour belongs to one of two protected client territories, so the territory cannot grow.",
+  "grid": "denver_suburban",
+  "as_of": "2026-09-29",
+  "territories": [
+    {
+      "territory_id": "T-000001",
+      "client_id": "C-ALPHA",
+      "client_business_name": "Peak Bath Solutions",
+      "starting_zip": "80121",
+      "territory_size_class": "SMALL",
+      "status": "ACTIVE_PROTECTED",
+      "approved_by": "Sales Manager",
+      "reservation_date": "2026-02-10",
+      "contract_start_date": "2026-03-01",
+      "contract_end_date": "2027-02-28",
+      "zips": ["80121", "80120", "80122"],
+      "notes": "Fixture: protects the west and north neighbours of 80123."
+    },
+    {
+      "territory_id": "T-000003",
+      "client_id": "C-CHARLIE",
+      "client_business_name": "Southglenn Shower Co",
+      "starting_zip": "80127",
+      "territory_size_class": "STANDARD",
+      "status": "ACTIVE_PROTECTED",
+      "approved_by": "Sales Manager",
+      "reservation_date": "2026-05-02",
+      "contract_start_date": "2026-06-01",
+      "contract_end_date": "2027-05-31",
+      "zips": ["80127", "80129", "80124", "80111"],
+      "notes": "Fixture: protects the south and east neighbours of 80123."
+    }
+  ],
+  "requests": [
+    {
+      "name": "standard_from_surrounded_start",
+      "starting_zip": "80123",
+      "size_class": "STANDARD",
+      "client_name": "Boxed-In Baths",
+      "expected": {
+        "status": "PROPOSED",
+        "zips": ["80123"],
+        "target_status": "BELOW_MINIMUM_VIABLE",
+        "flags_include": ["FRONTIER_EXHAUSTED", "BELOW_MINIMUM_VIABLE"],
+        "excluded_reasons": {
+          "80120": "BLOCKED_ACTIVE_PROTECTED",
+          "80122": "BLOCKED_ACTIVE_PROTECTED",
+          "80124": "BLOCKED_ACTIVE_PROTECTED",
+          "80127": "BLOCKED_ACTIVE_PROTECTED"
+        },
+        "approval_required": true
+      }
+    }
+  ],
+  "expected_behavior": [
+    "Proposal contains only the starting ZIP.",
+    "All four neighbours are listed as excluded with BLOCKED_ACTIVE_PROTECTED, naming T-000001 or T-000003.",
+    "Flags include FRONTIER_EXHAUSTED and BELOW_MINIMUM_VIABLE; a human must decide."
+  ]
+}

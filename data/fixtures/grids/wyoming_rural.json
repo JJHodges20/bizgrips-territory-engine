@@ -1,0 +1,34 @@
+{
+  "grid_id": "wyoming_rural",
+  "description": "SYNTHETIC central-Wyoming chain: three ZCTAs with very large land areas (over the 400 sq mi cap) and two compact Casper ZCTAs. Values are plausible but not real Census data.",
+  "zctas": [
+    {"zcta": "82633", "postal_zip": "82633", "primary_city": "Douglas", "state": "WY", "latitude": 42.760, "longitude": -105.380, "land_area_sq_miles": 1850.0,
+     "total_population": 8100, "total_households": 3300, "owner_occupied_households": 2400, "renter_occupied_households": 900,
+     "owner_households_age_45_plus": 1750, "owner_households_age_55_plus": 1350, "owner_households_age_65_plus": 800,
+     "total_housing_units": 3900, "homes_built_before_2000": 3000, "homes_built_before_1990": 2600, "homes_built_before_1980": 1900,
+     "median_household_income": 71000, "median_home_value": 245000},
+    {"zcta": "82637", "postal_zip": "82637", "primary_city": "Glenrock", "state": "WY", "latitude": 42.860, "longitude": -105.870, "land_area_sq_miles": 1210.0,
+     "total_population": 3600, "total_households": 1500, "owner_occupied_households": 1100, "renter_occupied_households": 400,
+     "owner_households_age_45_plus": 800, "owner_households_age_55_plus": 610, "owner_households_age_65_plus": 360,
+     "total_housing_units": 1750, "homes_built_before_2000": 1400, "homes_built_before_1990": 1250, "homes_built_before_1980": 900,
+     "median_household_income": 68000, "median_home_value": 215000},
+    {"zcta": "82636", "postal_zip": "82636", "primary_city": "Evansville", "state": "WY", "latitude": 42.865, "longitude": -106.245, "land_area_sq_miles": 45.0,
+     "total_population": 2900, "total_households": 1100, "owner_occupied_households": 780, "renter_occupied_households": 320,
+     "owner_households_age_45_plus": 520, "owner_households_age_55_plus": 380, "owner_households_age_65_plus": 210,
+     "total_housing_units": 1200, "homes_built_before_2000": 900, "homes_built_before_1990": 800, "homes_built_before_1980": 600,
+     "median_household_income": 62000, "median_home_value": 205000},
+    {"zcta": "82609", "postal_zip": "82609", "primary_city": "Casper", "state": "WY", "latitude": 42.845, "longitude": -106.285, "land_area_sq_miles": 28.0,
+     "total_population": 16500, "total_households": 6500, "owner_occupied_households": 4600, "renter_occupied_households": 1900,
+     "owner_households_age_45_plus": 3200, "owner_households_age_55_plus": 2400, "owner_households_age_65_plus": 1400,
+     "total_housing_units": 7100, "homes_built_before_2000": 5300, "homes_built_before_1990": 4700, "homes_built_before_1980": 3200,
+     "median_household_income": 76000, "median_home_value": 265000},
+    {"zcta": "82604", "postal_zip": "82604", "primary_city": "Casper", "state": "WY", "latitude": 42.820, "longitude": -106.450, "land_area_sq_miles": 1650.0,
+     "total_population": 14000, "total_households": 5600, "owner_occupied_households": 4300, "renter_occupied_households": 1300,
+     "owner_households_age_45_plus": 3000, "owner_households_age_55_plus": 2250, "owner_households_age_65_plus": 1300,
+     "total_housing_units": 6100, "homes_built_before_2000": 4200, "homes_built_before_1990": 3600, "homes_built_before_1980": 2400,
+     "median_household_income": 81000, "median_home_value": 285000}
+  ],
+  "adjacency": [
+    ["82633", "82637"], ["82636", "82637"], ["82609", "82636"], ["82604", "82609"]
+  ]
+}

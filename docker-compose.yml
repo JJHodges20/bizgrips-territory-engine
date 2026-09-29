@@ -1,0 +1,27 @@
+# Optional PostgreSQL + PostGIS for shared deployments.
+# Local development and tests default to SQLite and do not need this.
+#
+#   docker compose up -d db
+#   DATABASE_URL=postgresql+psycopg://bizgrips:bizgrips@localhost:5432/bizgrips_territory
+#   pip install -e ".[dev,postgres]" && make db-upgrade
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: bizgrips-territory-db
+    environment:
+      POSTGRES_USER: bizgrips
+      POSTGRES_PASSWORD: bizgrips
+      POSTGRES_DB: bizgrips_territory
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bizgrips -d bizgrips_territory"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

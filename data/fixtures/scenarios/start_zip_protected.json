@@ -1,0 +1,43 @@
+{
+  "scenario_id": "start_zip_protected",
+  "description": "The prospect's starting ZIP is already ACTIVE_PROTECTED for another client.",
+  "grid": "denver_suburban",
+  "as_of": "2026-09-29",
+  "territories": [
+    {
+      "territory_id": "T-000001",
+      "client_id": "C-ALPHA",
+      "client_business_name": "Peak Bath Solutions",
+      "starting_zip": "80123",
+      "territory_size_class": "STANDARD",
+      "status": "ACTIVE_PROTECTED",
+      "approved_by": "Sales Manager",
+      "reservation_date": "2026-02-10",
+      "contract_start_date": "2026-03-01",
+      "contract_end_date": "2027-02-28",
+      "zips": ["80123", "80120", "80128"],
+      "notes": "Fixture: active client protecting three ZIPs."
+    }
+  ],
+  "requests": [
+    {
+      "name": "standard_from_protected_start",
+      "starting_zip": "80123",
+      "size_class": "STANDARD",
+      "client_name": "New Prospect LLC",
+      "expected": {
+        "status": "FAILED",
+        "failure_code": "START_ZIP_UNAVAILABLE",
+        "blocking_territory_id": "T-000001",
+        "blocking_status": "ACTIVE_PROTECTED",
+        "suggestions_include_any": ["80122", "80124", "80127"],
+        "conflict_check": {"protected": ["80123"], "conflict_count": 1}
+      }
+    }
+  ],
+  "expected_behavior": [
+    "Generation fails with START_ZIP_UNAVAILABLE naming T-000001 and ACTIVE_PROTECTED.",
+    "Nearest available ZCTAs are suggested as alternative starting points.",
+    "The registry rejects any attempt to reserve 80123 for a different client."
+  ]
+}

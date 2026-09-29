@@ -1,0 +1,130 @@
+# BizGrips Territory Standard v1.0 — numeric business rules.
+#
+# EVERY value in this file is a V1 hypothesis. Change it here (and describe the change in
+# docs/BIZGRIPS_TERRITORY_STANDARD.md), never in code. Loaded and validated by
+# app/config/business_rules.py; tests fail if weights do not sum to 1.0 or bands overlap.
+
+version: "1.0.0"
+effective_date: "2026-09-29"
+notes: >
+  Initial hypotheses adopted for Milestone 0. Component ramps are to be calibrated against
+  national ZCTA percentiles in Milestone 3 once real ACS data has been imported.
+
+scoring:
+  # Weights must sum to 1.0.
+  weights:
+    owner_concentration: 0.35
+    owner_age_45_plus: 0.25
+    housing_age: 0.20
+    purchasing_power: 0.15
+    serviceability: 0.05
+
+  # Each component maps one metric to 0..100 with a clamped ramp:
+  #   linear: 100 * (value - floor) / (ceiling - floor)
+  #   log10:  100 * (log10(value) - log10(floor)) / (log10(ceiling) - log10(floor))
+  components:
+    owner_concentration:
+      metric: owner_occupancy_share          # owner_occupied_households / total_households
+      scale: linear
+      floor: 0.40
+      ceiling: 0.85
+    owner_age_45_plus:
+      metric: owner_45_plus_share            # owner_households_age_45_plus / owner_occupied_households
+      scale: linear
+      floor: 0.50
+      ceiling: 0.80
+    housing_age:
+      metric: pre_2000_share                 # homes_built_before_2000 / total_housing_units
+      scale: linear
+      floor: 0.30
+      ceiling: 0.85
+    purchasing_power:
+      metric: median_household_income        # USD
+      scale: linear
+      floor: 40000
+      ceiling: 120000
+    serviceability:
+      metric: households_per_sq_mile         # total_households / land_area_sq_miles
+      scale: log10
+      floor: 10
+      ceiling: 1000
+
+  # What happens when a component's metric cannot be computed:
+  #   renormalize: drop the component and rescale the remaining weights to sum to 1.0
+  #   zero:        score the missing component as 0
+  missing_data_policy: renormalize
+  # If any of these components is missing, the ZCTA is unscored (tier U).
+  required_components: [owner_concentration]
+  # ZCTAs with fewer households than this are unscored (tier U): estimates are too noisy.
+  min_households_for_scoring: 50
+  # Tier thresholds: the first tier (top-down) whose threshold <= score wins.
+  tiers:
+    A: 75
+    B: 60
+    C: 45
+    D: 0
+  unscored_tier: U
+  rounding_decimals: 1
+
+opportunity_units:
+  # OU = owner_occupied_households * age_factor * housing_age_factor * purchasing_power_factor
+  # age_factor = age_45_plus_floor + (1 - age_45_plus_floor) * owner_45_plus_share
+  # With age_45_plus_floor = 0.0 the base is exactly owner households age 45+.
+  age_45_plus_floor: 0.0
+  housing_age_factor:
+    floor: 0.5                 # factor when no homes were built before 2000
+    share_at_full_credit: 1.0  # pre-2000 share at which the factor reaches 1.0
+  purchasing_power_factor:
+    floor: 0.5                 # factor at or below income_at_floor
+    income_at_floor: 45000
+    income_at_full_credit: 90000
+  # A factor whose input is missing: neutral (factor 1.0, flagged) or floor (factor = floor, flagged).
+  missing_factor_policy: neutral
+  rounding_decimals: 0
+
+territory_sizes:
+  # Bands are in Opportunity Units, ascending and non-overlapping.
+  bands:
+    small:    { target_min: 10000, target_max: 20000 }
+    standard: { target_min: 20000, target_max: 32000 }
+    large:    { target_min: 32000, target_max: 45000 }
+  default_size_class: standard
+  minimum_viable_units: 10000
+  absolute_max_units: 50000
+  max_zctas_per_territory: 40
+  # Fraction above target_max the generator may overshoot to include the final ZCTA.
+  target_tolerance: 0.10
+
+serviceability:
+  default_service_radius_miles: 30
+  max_service_radius_miles: 45
+  max_zcta_land_area_sq_miles: 400
+  allow_cross_state: true
+
+generator:
+  # Selection priority = opportunity_score - distance_penalty_points_per_mile * miles_from_start
+  distance_penalty_points_per_mile: 1.5
+  # ZCTAs below this tier are never auto-selected. Tier U is always excluded.
+  min_tier_for_auto_selection: D
+  tie_breakers: [distance_asc, opportunity_units_desc, zcta_asc]
+  # How many nearby available ZCTAs to suggest when a start or requested ZIP is unavailable.
+  replacement_suggestions: 5
+
+registry:
+  # ZIP-level statuses that block a different client.
+  blocking_statuses: [RESERVED, ACTIVE_PROTECTED, PENDING_RELEASE]
+  reservation_days: 30
+  reservation_extension_days: 15
+  max_reservation_extensions: 1
+  release_notice_days: 30
+  buffer_zone_required: false
+  approval_required_for: [RESERVED, ACTIVE_PROTECTED]
+  # Manual exceptions a human may record (approver + reason required).
+  # A conflict with an ACTIVE_PROTECTED ZIP can never be overridden.
+  allowed_exceptions:
+    - NON_CONTIGUOUS_ZCTA
+    - EXCEEDS_MAX_SIZE
+    - UNSERVICEABLE_ZCTA
+    - OUTSIDE_SERVICE_RADIUS
+    - CROSS_STATE
+    - OVERRIDE_EXPIRED_RESERVATION

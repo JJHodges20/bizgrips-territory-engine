@@ -1,0 +1,34 @@
+{
+  "grid_id": "symmetric_chain",
+  "description": "SYNTHETIC five-ZCTA line with mirror-image values around the centre, used to prove deterministic tie-breaking. Codes are placeholders; values are not real Census data.",
+  "zctas": [
+    {"zcta": "40010", "postal_zip": "40010", "primary_city": "Fixtureville", "state": "KY", "latitude": 38.200, "longitude": -85.900, "land_area_sq_miles": 7.0,
+     "total_population": 12500, "total_households": 5000, "owner_occupied_households": 3800, "renter_occupied_households": 1200,
+     "owner_households_age_45_plus": 2700, "owner_households_age_55_plus": 2000, "owner_households_age_65_plus": 1100,
+     "total_housing_units": 5300, "homes_built_before_2000": 4200, "homes_built_before_1990": 3700, "homes_built_before_1980": 2800,
+     "median_household_income": 79000, "median_home_value": 230000},
+    {"zcta": "40011", "postal_zip": "40011", "primary_city": "Fixtureville", "state": "KY", "latitude": 38.200, "longitude": -85.850, "land_area_sq_miles": 6.5,
+     "total_population": 17500, "total_households": 7000, "owner_occupied_households": 5400, "renter_occupied_households": 1600,
+     "owner_households_age_45_plus": 3900, "owner_households_age_55_plus": 2900, "owner_households_age_65_plus": 1600,
+     "total_housing_units": 7400, "homes_built_before_2000": 6100, "homes_built_before_1990": 5400, "homes_built_before_1980": 4000,
+     "median_household_income": 84000, "median_home_value": 250000},
+    {"zcta": "40012", "postal_zip": "40012", "primary_city": "Fixtureville", "state": "KY", "latitude": 38.200, "longitude": -85.800, "land_area_sq_miles": 6.0,
+     "total_population": 20000, "total_households": 8000, "owner_occupied_households": 6000, "renter_occupied_households": 2000,
+     "owner_households_age_45_plus": 4200, "owner_households_age_55_plus": 3100, "owner_households_age_65_plus": 1700,
+     "total_housing_units": 8400, "homes_built_before_2000": 6800, "homes_built_before_1990": 6000, "homes_built_before_1980": 4500,
+     "median_household_income": 88000, "median_home_value": 260000},
+    {"zcta": "40013", "postal_zip": "40013", "primary_city": "Fixtureville", "state": "KY", "latitude": 38.200, "longitude": -85.750, "land_area_sq_miles": 6.5,
+     "total_population": 17500, "total_households": 7000, "owner_occupied_households": 5400, "renter_occupied_households": 1600,
+     "owner_households_age_45_plus": 3900, "owner_households_age_55_plus": 2900, "owner_households_age_65_plus": 1600,
+     "total_housing_units": 7400, "homes_built_before_2000": 6100, "homes_built_before_1990": 5400, "homes_built_before_1980": 4000,
+     "median_household_income": 84000, "median_home_value": 250000},
+    {"zcta": "40014", "postal_zip": "40014", "primary_city": "Fixtureville", "state": "KY", "latitude": 38.200, "longitude": -85.700, "land_area_sq_miles": 7.0,
+     "total_population": 12500, "total_households": 5000, "owner_occupied_households": 3800, "renter_occupied_households": 1200,
+     "owner_households_age_45_plus": 2700, "owner_households_age_55_plus": 2000, "owner_households_age_65_plus": 1100,
+     "total_housing_units": 5300, "homes_built_before_2000": 4200, "homes_built_before_1990": 3700, "homes_built_before_1980": 2800,
+     "median_household_income": 79000, "median_home_value": 230000}
+  ],
+  "adjacency": [
+    ["40010", "40011"], ["40011", "40012"], ["40012", "40013"], ["40013", "40014"]
+  ]
+}
