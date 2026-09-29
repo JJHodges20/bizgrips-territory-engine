@@ -8,6 +8,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.market import ZctaRecord
+from app.schemas.scoring import ZctaScore
 
 # Columns whose NULL means "missing source data" (postal_zip / primary_city NULL are meaningful).
 MARKET_DATA_FIELDS: tuple[str, ...] = (
@@ -168,3 +169,23 @@ class FieldProvenanceRecord(BaseModel):
 
 class FieldProvenanceResponse(BaseModel):
     items: list[FieldProvenanceRecord]
+
+
+class CachedScore(BaseModel):
+    """What scripts/score_all.py last cached on the row (may lag the live computation)."""
+
+    opportunity_score: float | None = None
+    market_tier: str | None = None
+    opportunity_units: float | None = None
+    score_config_version: str | None = None
+    scored_at: datetime | None = None
+
+
+class ZctaScoreResponse(ZctaScore):
+    """Live score from the current rules plus the cached values for comparison."""
+
+    cached: CachedScore
+    disclaimer: str = (
+        "Comparative index from public Census data for sales intelligence; not a prediction "
+        "or guarantee of marketing performance."
+    )

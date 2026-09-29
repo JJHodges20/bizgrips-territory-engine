@@ -4,9 +4,10 @@ Read this first in every session. Update it at the end of every session.
 
 ## Current milestone
 
-**Milestone 2 — ZIP/ZCTA data API: complete (2026-09-29).**
-Next up: **Milestone 3 — Opportunity scoring + Opportunity Units** (spec in `MILESTONES.md`,
-formulas in `SCORING_SPEC.md`). Plan first; it includes the calibration report.
+**Milestone 3 — Opportunity scoring + Opportunity Units: complete (2026-09-29).**
+Next up: **Milestone 4 — Territory registry** (spec in `MILESTONES.md`, rules in
+`BIZGRIPS_TERRITORY_STANDARD.md` sections 6-11). Plan first. One open decision from the
+calibration report is waiting on BizGrips (see Known issues).
 
 ## Completed
 
@@ -70,7 +71,40 @@ B25038) recorded as a V2 candidate.
 - Not included (by design): ZIP availability / registry state on ZCTA responses, which
   arrives with the registry in Milestone 4; write endpoints.
 
+### Milestone 3 (2026-09-29)
+
+- `app/services/scoring.py`: `score_zcta`, `opportunity_units`, `score_territory`,
+  `compare_territories` as pure functions over `ZctaRecord` + `BusinessRules`; schemas in
+  `app/schemas/scoring.py`. The worked example reproduces 75.8 / Tier A / 7,299 OU, the
+  missing-income variant 74.2 / B with completeness 0.85, and every scenario-5 expectation.
+- `scripts/score_all.py` caches score, tier and OU on `zcta_markets` (33,791 rows in about
+  3 s) and snapshots the rules in `scoring_configs`; `scripts/calibration_report.py` writes
+  `CALIBRATION_REPORT.md`; `GET /zctas/{zcta}/score` computes live and shows the cache.
+- Tests: worked example, zero policy, scenario 5, determinism (repeat and input order),
+  weight sensitivity (direction and magnitude), ramps and tiers, OU edge cases, territory
+  aggregation and comparison, the script end to end, the endpoint; 95 tests pass.
+- `TEST_MARKETS.md` fixture table now carries the exact computed scores (grid total 59,000 OU).
+
 ## Known issues / open questions
+
+- **Calibration decision (open, needs BizGrips):** with the V1 ramps 40% of scorable ZCTAs
+  are Tier A and 34% Tier B, because three ceilings sit below or near the national median
+  (owner share ceiling 0.85 vs median 0.78; owner 45+ ceiling 0.80 vs median 0.76; pre-2000
+  ceiling 0.85 vs median 0.83), so 29-42% of ZCTAs max out those components. Projections on
+  the real data (nothing changed):
+
+  | Option | A | B | C | D | Littleton 80123 | Akron 44301 | Newark 07103 |
+  |--------|---|---|---|---|-----------------|-------------|--------------|
+  | Current ramps (1.0.0) | 40% | 34% | 13% | 4% | 77.9 A | 60.0 B | 35.7 D |
+  | Recommended: keep floors, ceilings to p90 (0.925 / 0.90 / 0.95) | 16% | 40% | 27% | 8% | 67.4 B | 53.5 C | 29.5 D |
+  | Full p10-p90 ramps | 8% | 24% | 34% | 27% | 54.3 C | 42.6 D | 16.2 D |
+
+  Recommendation: the middle option, applied as business rules 1.1.0 (ceilings only). It keeps
+  Tier A meaningful (top ~16%) without pushing solid suburban markets into C. Changing it also
+  means updating the worked example in `SCORING_SPEC.md` and the fixture table. Income and
+  density ramps already fit the p10-p90 range and need no change.
+- OU sanity check: median ZCTA 396 OU, top quartile 1,700-5,700 OU, so a Standard territory
+  (20,000-32,000 OU) is roughly 5-15 suburban ZCTAs, consistent with the size-class table.
 
 - All numeric rules are hypotheses. Component ramps need calibration against real ACS
   percentiles (Milestone 3 calibration report); the data for that is now in the dev database.
@@ -87,10 +121,10 @@ B25038) recorded as a V2 candidate.
 
 ## Next task
 
-Milestone 3, step 1: `app/services/scoring.py` (`score_zcta`, `opportunity_units`) as pure
-functions over `ZctaRecord` + `BusinessRules`, verified against the worked example in
-`SCORING_SPEC.md` (80123 -> 75.8 / Tier A / 7,299 OU) and the fixture expectations, before
-`scripts/score_all.py` and the calibration report.
+Milestone 4, step 1: registry service (`app/services/registry.py`) with the status machine
+from Standard sections 8-11 (PROPOSED -> RESERVED -> ACTIVE_PROTECTED -> PENDING_RELEASE ->
+RELEASED / CANCELLED), `approved_by` enforcement and the availability query, tested on
+scenarios 2, 3 and 9 before any write endpoints.
 
 ## Decisions log
 
@@ -111,3 +145,6 @@ functions over `ZctaRecord` + `BusinessRules`, verified against the worked examp
 | 2026-09-29 | Land and water area come from the file's ALAND/AWATER attributes, not from the generalised geometry. | The attributes are the un-generalised official areas. |
 | 2026-09-29 | Bucket sums are NULL when any component is unavailable; negative values outside the sentinel list are also NULL. | Never store a partial sum or a jam value as a number. |
 | 2026-09-29 | The read API exposes `missing_fields` and `NO_MARKET_DATA` explicitly; `tier` filters match the stored tier exactly (null until scored). | Missing data is explicit, never a silent zero; unscored is distinguishable from tier U. |
+| 2026-09-29 | Scores are cached by `score_all.py` but `GET /zctas/{zcta}/score` always computes live and returns the cache beside it. | Rules changes become visible immediately; drift between cache and rules is never hidden. |
+| 2026-09-29 | Territory shares use paired totals; OU of a ZCTA with zero owner households is 0, not None. | No bias from a single missing field; empty is different from unknown. |
+| 2026-09-29 | Ramp recalibration deferred to a BizGrips decision; report and projections recorded instead of changing rules 1.0.0. | Every rule change is a human decision; the projections give the numbers needed to make it. |

@@ -5,15 +5,20 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Path, Query
 
 from app.api.deps import SessionDep
+from app.config import get_business_rules
 from app.enums import MarketTier
 from app.repositories.markets import get_market_row, list_market_rows, neighbour_rows
 from app.schemas.api import (
+    CachedScore,
     NeighborItem,
     NeighborsResponse,
     ZctaListItem,
     ZctaListResponse,
     ZctaResponse,
+    ZctaScoreResponse,
 )
+from app.schemas.market import ZctaRecord
+from app.services.scoring import score_zcta
 
 router = APIRouter(prefix="/zctas", tags=["zctas"])
 
@@ -88,3 +93,15 @@ def neighbors(session: SessionDep, zcta: str = ZCTA_PATH) -> NeighborsResponse:
         for row, length in neighbour_rows(session, zcta)
     ]
     return NeighborsResponse(zcta=zcta, count=len(items), neighbors=items)
+
+
+@router.get("/{zcta}/score", response_model=ZctaScoreResponse)
+def zcta_score(session: SessionDep, zcta: str = ZCTA_PATH) -> ZctaScoreResponse:
+    """Opportunity Score, tier, components and Opportunity Units computed live from the
+    stored record and the current business rules (SCORING_SPEC.md)."""
+    row = get_market_row(session, zcta)
+    if row is None:
+        raise _not_found(zcta)
+    live = score_zcta(ZctaRecord.from_row(row), get_business_rules())
+    cached = CachedScore.model_validate(row, from_attributes=True)
+    return ZctaScoreResponse(**live.model_dump(), cached=cached)

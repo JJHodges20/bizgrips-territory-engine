@@ -160,5 +160,19 @@ OU = 13,400 × (0 + 1 × 0.6940) × (0.5 + 0.5 × 0.5698) × 1.0 = 9,300 × 0.78
 zcta, score (float|None), tier (A|B|C|D|U), components: {name: {metric, value, score, weight, missing}},
 data_completeness (0..1), missing_components [..], unscored_reason (str|None),
 opportunity_units (float|None), ou_factors: {age, housing_age, purchasing_power}, missing_factors [..],
-config_version
+ou_reason (str|None: INSUFFICIENT_DATA when OU is None), config_version
 ```
+
+## 11. Implementation notes (Milestone 3, 2026-09-29)
+
+- Implemented in `app/services/scoring.py` (`score_zcta`, `opportunity_units`,
+  `score_territory`, `compare_territories`); schemas in `app/schemas/scoring.py`.
+- Component scores are reported rounded to 2 decimals for display; the total is computed from
+  the unrounded components in `COMPONENT_NAMES` order and rounded once at the end.
+- Territory shares use paired totals (only ZCTAs where both numerator and denominator are
+  present), so a ZCTA missing one field does not bias the ratio; `totals.missing_by_field`
+  lists the gaps. A ZCTA with `owner_occupied_households = 0` has OU 0, not None.
+- `scripts/score_all.py` caches score/tier/OU on `zcta_markets` and snapshots the rules in
+  `scoring_configs`; `scripts/calibration_report.py` writes `CALIBRATION_REPORT.md`.
+- `GET /zctas/{zcta}/score` always computes live from the current rules and also returns the
+  cached values so drift after a rules change is visible.

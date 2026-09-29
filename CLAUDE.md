@@ -8,9 +8,9 @@ requires a named human to approve before a territory becomes protected.
 Master roadmap: `docs/ROADMAP_V1.1.md`.
 
 ## Current milestone
-Milestones 0 (repository + specifications), 1 (public data ingestion) and 2 (ZCTA read API)
-are complete. Next: Milestone 3 (scoring + Opportunity Units). Always read
-`docs/IMPLEMENTATION_STATUS.md` first.
+Milestones 0 (repository + specifications), 1 (public data ingestion), 2 (ZCTA read API) and
+3 (scoring + Opportunity Units) are complete. Next: Milestone 4 (territory registry). Always
+read `docs/IMPLEMENTATION_STATUS.md` first.
 
 ## Read these before changing territory logic
 1. `docs/BIZGRIPS_TERRITORY_STANDARD.md` — the business rules the software enforces
@@ -70,6 +70,8 @@ make format       # ruff format + fix
 make dev          # uvicorn app.main:app --reload
 make db-upgrade   # alembic upgrade head
 make seed-fixtures SCENARIO=denver_suburban_available   # load a fixture market into the dev DB
+python scripts/score_all.py          # cache scores/tiers/OU for every ZCTA (re-run after imports or rule changes)
+python scripts/calibration_report.py # ramps vs. the imported ACS distribution -> docs/CALIBRATION_REPORT.md
 make import-data  # geography + ACS import into the dev DB (needs the geo extra; ~3 min, ~280 MB raw)
 ```
 Windows without GNU make: `.\dev.ps1 <target>` provides the same targets.

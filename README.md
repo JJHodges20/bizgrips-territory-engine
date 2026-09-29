@@ -13,8 +13,8 @@ The engine recommends; a human approves.
 | 0 | Repository, dev environment, Phase 0 specifications, fixture markets | Done |
 | 1 | Public data ingestion (ACS 5-year + CB ZCTA boundaries, adjacency, provenance) | Done |
 | 2 | ZIP/ZCTA data API | Done |
-| 3 | Opportunity scoring + Opportunity Units | Next |
-| 4 | Territory registry | Planned |
+| 3 | Opportunity scoring + Opportunity Units | Done |
+| 4 | Territory registry | Next |
 | 5 | Territory generator | Planned |
 | 6 | Conflict checker | Planned |
 | 7 | Sales-call market checker | Planned |
@@ -52,10 +52,21 @@ The API then answers at http://127.0.0.1:8000 (`/docs` for the interactive refer
 | `GET /zctas/{zcta}` | every stored column for one ZCTA, derived shares, `missing_fields`; `?include_geometry=true` adds GeoJSON |
 | `GET /zctas?state=&city=&tier=&limit=&offset=` | paged list filtered by state, primary-city prefix and market tier |
 | `GET /zctas/{zcta}/neighbors` | rook-adjacent ZCTAs with shared boundary length |
+| `GET /zctas/{zcta}/score` | live Opportunity Score, tier, components, Opportunity Units, plus the cached values |
 | `GET /imports`, `GET /imports/fields` | import runs and which import last wrote each field |
 
-Unknown ZCTAs answer 404 with `detail.code = NO_MARKET_DATA`. Market tiers and scores are null
-until Milestone 3 scores the data.
+Unknown ZCTAs answer 404 with `detail.code = NO_MARKET_DATA`.
+
+## Scoring the data (Milestone 3)
+
+```powershell
+python scripts/score_all.py            # cache score, tier and OU on every ZCTA; snapshot the rules version
+python scripts/calibration_report.py   # docs/CALIBRATION_REPORT.md: ramps vs. the real ACS distribution
+```
+
+Scoring is a pure function of the stored record and `app/config/business_rules.yaml`
+(`app/services/scoring.py`, spec in `docs/SCORING_SPEC.md`). Re-run `score_all.py` after any
+import or rules change; the cached tier drives `GET /zctas?tier=` and the generator.
 
 ## Importing the public data (Milestone 1)
 
