@@ -4,8 +4,9 @@ Read this first in every session. Update it at the end of every session.
 
 ## Current milestone
 
-**Milestone 1 — Public data ingestion: complete (2026-09-29).**
-Next up: **Milestone 2 — ZIP/ZCTA data API** (spec in `MILESTONES.md`). Use plan mode first.
+**Milestone 2 — ZIP/ZCTA data API: complete (2026-09-29).**
+Next up: **Milestone 3 — Opportunity scoring + Opportunity Units** (spec in `MILESTONES.md`,
+formulas in `SCORING_SPEC.md`). Plan first; it includes the calibration report.
 
 ## Completed
 
@@ -53,6 +54,22 @@ B25038) recorded as a V2 candidate.
   ~6 s (after the ~280 MB of downloads). Spot checks: 80123 has 6 neighbours, 44301 has 4.
   A second run changed no row counts and added new import records only.
 
+### Milestone 2 (2026-09-29)
+
+- Read API: `GET /zctas/{zcta}` (all columns, derived shares, explicit `missing_fields`,
+  optional GeoJSON), `GET /zctas?state=&city=&tier=` (paged, ordered by code),
+  `GET /zctas/{zcta}/neighbors` (with shared boundary length), `GET /imports` and
+  `GET /imports/fields` (provenance). Unknown ZCTAs answer 404 `NO_MARKET_DATA`; malformed
+  codes 422. Response models in `app/schemas/api.py` mirror the data dictionary.
+- Plumbing: per-request session dependency (`app/api/deps.py`); `create_app(engine=...)`
+  serves an existing engine so tests run on in-memory SQLite; fixture seeding moved to
+  `app/ingest/seed.py` (the script delegates to it); ORM-row repository variants and
+  `app/repositories/provenance.py`.
+- Tests: seven endpoint tests on fixture-seeded databases (`denver_suburban_available`,
+  `missing_census_fields`); 84 tests pass. Smoke-checked against the real import.
+- Not included (by design): ZIP availability / registry state on ZCTA responses, which
+  arrives with the registry in Milestone 4; write endpoints.
+
 ## Known issues / open questions
 
 - All numeric rules are hypotheses. Component ramps need calibration against real ACS
@@ -70,8 +87,10 @@ B25038) recorded as a V2 candidate.
 
 ## Next task
 
-Milestone 2, step 1: `GET /zctas/{zcta}` and `GET /zctas?state=&city=` on top of
-`app/repositories/markets.py`, returning `ZctaRecord` plus derived shares and provenance.
+Milestone 3, step 1: `app/services/scoring.py` (`score_zcta`, `opportunity_units`) as pure
+functions over `ZctaRecord` + `BusinessRules`, verified against the worked example in
+`SCORING_SPEC.md` (80123 -> 75.8 / Tier A / 7,299 OU) and the fixture expectations, before
+`scripts/score_all.py` and the calibration report.
 
 ## Decisions log
 
@@ -91,3 +110,4 @@ Milestone 2, step 1: `GET /zctas/{zcta}` and `GET /zctas?state=&city=` on top of
 | 2026-09-29 | Centroid = polygon centroid in EPSG:5070, falling back to the representative point when the centroid is outside the polygon. | Distances need a true centre; the fallback keeps every stored point inside its ZCTA. |
 | 2026-09-29 | Land and water area come from the file's ALAND/AWATER attributes, not from the generalised geometry. | The attributes are the un-generalised official areas. |
 | 2026-09-29 | Bucket sums are NULL when any component is unavailable; negative values outside the sentinel list are also NULL. | Never store a partial sum or a jam value as a number. |
+| 2026-09-29 | The read API exposes `missing_fields` and `NO_MARKET_DATA` explicitly; `tier` filters match the stored tier exactly (null until scored). | Missing data is explicit, never a silent zero; unscored is distinguishable from tier U. |

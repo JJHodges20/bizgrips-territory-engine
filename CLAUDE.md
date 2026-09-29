@@ -8,8 +8,9 @@ requires a named human to approve before a territory becomes protected.
 Master roadmap: `docs/ROADMAP_V1.1.md`.
 
 ## Current milestone
-Milestones 0 (repository + specifications) and 1 (public data ingestion) are complete.
-Next: Milestone 2 (ZIP/ZCTA data API). Always read `docs/IMPLEMENTATION_STATUS.md` first.
+Milestones 0 (repository + specifications), 1 (public data ingestion) and 2 (ZCTA read API)
+are complete. Next: Milestone 3 (scoring + Opportunity Units). Always read
+`docs/IMPLEMENTATION_STATUS.md` first.
 
 ## Read these before changing territory logic
 1. `docs/BIZGRIPS_TERRITORY_STANDARD.md` — the business rules the software enforces

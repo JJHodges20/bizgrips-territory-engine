@@ -12,8 +12,8 @@ The engine recommends; a human approves.
 |-----------|-------|-------|
 | 0 | Repository, dev environment, Phase 0 specifications, fixture markets | Done |
 | 1 | Public data ingestion (ACS 5-year + CB ZCTA boundaries, adjacency, provenance) | Done |
-| 2 | ZIP/ZCTA data API | Next |
-| 3 | Opportunity scoring + Opportunity Units | Planned |
+| 2 | ZIP/ZCTA data API | Done |
+| 3 | Opportunity scoring + Opportunity Units | Next |
 | 4 | Territory registry | Planned |
 | 5 | Territory generator | Planned |
 | 6 | Conflict checker | Planned |
@@ -43,7 +43,19 @@ Or use the task runner: `.\dev.ps1 setup`, `.\dev.ps1 test`, `.\dev.ps1 dev`.
 
 macOS / Linux / CI: `make setup && make test && make dev`.
 
-The API then answers at http://127.0.0.1:8000 (`/health`, `/config/business-rules`, `/docs`).
+The API then answers at http://127.0.0.1:8000 (`/docs` for the interactive reference).
+
+| Endpoint | Returns |
+|----------|---------|
+| `GET /health` | app, rules version, database status |
+| `GET /config/business-rules`, `GET /config/census-variables` | the version-controlled configuration |
+| `GET /zctas/{zcta}` | every stored column for one ZCTA, derived shares, `missing_fields`; `?include_geometry=true` adds GeoJSON |
+| `GET /zctas?state=&city=&tier=&limit=&offset=` | paged list filtered by state, primary-city prefix and market tier |
+| `GET /zctas/{zcta}/neighbors` | rook-adjacent ZCTAs with shared boundary length |
+| `GET /imports`, `GET /imports/fields` | import runs and which import last wrote each field |
+
+Unknown ZCTAs answer 404 with `detail.code = NO_MARKET_DATA`. Market tiers and scores are null
+until Milestone 3 scores the data.
 
 ## Importing the public data (Milestone 1)
 

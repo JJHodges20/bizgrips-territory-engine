@@ -56,3 +56,50 @@ def neighbour_zctas(session: Session, zcta: str) -> list[str]:
 
 def count_markets(session: Session) -> int:
     return int(session.scalar(select(func.count()).select_from(ZctaMarket)) or 0)
+
+
+# ---- ORM-row access for the API (serialisation needs every column) ----------------------------
+
+
+def get_market_row(session: Session, zcta: str) -> ZctaMarket | None:
+    return session.get(ZctaMarket, zcta)
+
+
+def list_market_rows(
+    session: Session,
+    *,
+    state: str | None = None,
+    city: str | None = None,
+    tier: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> tuple[list[ZctaMarket], int]:
+    """Filtered page of ZCTA rows ordered by code, plus the total matching count."""
+    conditions = []
+    if state:
+        conditions.append(ZctaMarket.state == state.upper())
+    if city:
+        conditions.append(func.lower(ZctaMarket.primary_city).like(city.strip().lower() + "%"))
+    if tier:
+        conditions.append(ZctaMarket.market_tier == tier.upper())
+    total = session.scalar(select(func.count()).select_from(ZctaMarket).where(*conditions))
+    rows = session.scalars(
+        select(ZctaMarket).where(*conditions).order_by(ZctaMarket.zcta).limit(limit).offset(offset)
+    ).all()
+    return list(rows), int(total or 0)
+
+
+def neighbour_rows(session: Session, zcta: str) -> list[tuple[ZctaMarket, float | None]]:
+    """Rook-adjacent ZCTA rows with the shared boundary length, ordered by code."""
+    stmt = (
+        select(ZctaMarket, ZctaAdjacency.shared_boundary_length_m)
+        .join(
+            ZctaAdjacency,
+            or_(
+                (ZctaAdjacency.zcta_a == zcta) & (ZctaAdjacency.zcta_b == ZctaMarket.zcta),
+                (ZctaAdjacency.zcta_b == zcta) & (ZctaAdjacency.zcta_a == ZctaMarket.zcta),
+            ),
+        )
+        .order_by(ZctaMarket.zcta)
+    )
+    return [(row, length) for row, length in session.execute(stmt)]
